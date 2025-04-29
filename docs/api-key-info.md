@@ -25,7 +25,7 @@ To use the Mailwizz node for n8n, you need an API key from your Mailwizz system.
    - From the list of existing keys, find and copy the API key
    - This is typically a long alphanumeric string
 
-![Example Mailwizz API Key Screen](../images/mailwizz-api-key-screen.png)
+![Example Mailwizz API Key Screen](images/mailwizz-api-key-screen.png)
 
 ### API Key Permissions
 
@@ -86,7 +86,7 @@ Aby korzystać z node'a Mailwizz dla n8n, potrzebujesz klucza API z Twojego syst
    - Z listy istniejących kluczy znajdź i skopiuj klucz API
    - Zazwyczaj jest to długi ciąg znaków alfanumerycznych
 
-![Przykładowy ekran klucza API Mailwizz](../images/mailwizz-api-key-screen.png)
+![Przykładowy ekran klucza API Mailwizz](images/mailwizz-api-key-screen.png)
 
 ### Uprawnienia Klucza API
 
