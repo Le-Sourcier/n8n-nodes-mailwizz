@@ -67,7 +67,7 @@ You can import this workflow directly into n8n:
 
 ```json
 {
-   "nodes": [
+"nodes": [
       {
          "parameters": {
             "authentication": "genericCredentialType",

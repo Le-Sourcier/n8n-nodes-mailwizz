@@ -739,6 +739,7 @@ export class MailwizzNode implements INodeType {
     }
 
     // Skonfiguruj bibliotekę node-mailwizz używając pojedynczego klucza API
+    // (biblioteka używa osobno publicKey i secret, ale możemy użyć tego samego klucza API dla obu)
     const config = {
       publicKey: credentials.apiKey as string,
       secret: credentials.apiKey as string, // Używamy tego samego klucza API jako sekret
@@ -932,49 +933,49 @@ export class MailwizzNode implements INodeType {
                 // Replace placeholders in template
                 if (items[i].json[featuredImageField]) {
                   templateContent = templateContent.replace(
-                      /\[FEATURED_IMAGE\]/g,
-                      items[i].json[featuredImageField] as string
+                    /\[FEATURED_IMAGE\]/g,
+                    items[i].json[featuredImageField] as string
                   );
                 }
 
                 if (items[i].json[excerptField]) {
                   templateContent = templateContent.replace(
-                      /\[POST_EXCERPT\]/g,
-                      items[i].json[excerptField] as string
+                    /\[POST_EXCERPT\]/g,
+                    items[i].json[excerptField] as string
                   );
                 }
 
                 if (items[i].json[dateField]) {
                   const dateValue = items[i].json[dateField];
-                  const formattedDate = typeof dateValue === 'string'
-                      ? new Date(dateValue).toLocaleDateString()
-                      : dateValue;
-
+                  const formattedDate = typeof dateValue === 'string' 
+                    ? new Date(dateValue).toLocaleDateString() 
+                    : dateValue;
+                  
                   templateContent = templateContent.replace(
-                      /\[POST_DATE\]/g,
-                      formattedDate as string
+                    /\[POST_DATE\]/g,
+                    formattedDate as string
                   );
                 }
 
                 if (items[i].json[linkField]) {
                   templateContent = templateContent.replace(
-                      /\[POST_LINK\]/g,
-                      items[i].json[linkField] as string
+                    /\[POST_LINK\]/g,
+                    items[i].json[linkField] as string
                   );
                 }
 
                 if (items[i].json[contentField]) {
                   templateContent = templateContent.replace(
-                      /\[POST_CONTENT\]/g,
-                      items[i].json[contentField] as string
+                    /\[POST_CONTENT\]/g,
+                    items[i].json[contentField] as string
                   );
                 }
 
                 // Add title replacement as well
                 if (items[i].json[this.getNodeParameter('wpSubjectField', i) as string]) {
                   templateContent = templateContent.replace(
-                      /\[POST_TITLE\]/g,
-                      items[i].json[this.getNodeParameter('wpSubjectField', i) as string] as string
+                    /\[POST_TITLE\]/g,
+                    items[i].json[this.getNodeParameter('wpSubjectField', i) as string] as string
                   );
                 }
 
