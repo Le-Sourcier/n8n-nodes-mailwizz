@@ -28,5 +28,5 @@ export class MailwizzApi implements ICredentialType {
       placeholder: "https://your-mailwizz-url.com/api",
       description: "The URL to your Mailwizz API",
     },
-  ],
+  ];
 }
