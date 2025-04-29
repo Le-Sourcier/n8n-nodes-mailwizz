@@ -6,6 +6,8 @@ import {
   NodeOperationError,
   NodeConnectionType,
   IDataObject,
+  ILoadOptionsFunctions,
+  INodePropertyOptions,
 } from 'n8n-workflow';
 
 import { Campaigns, Lists, Templates, CreateCampaignType } from 'node-mailwizz';
@@ -255,9 +257,12 @@ export class MailwizzNode implements INodeType {
         description: 'Whether to map WordPress categories to specific Mailwizz lists and segments',
       },
       {
-        displayName: 'List ID',
+        displayName: 'List',
         name: 'listId',
-        type: 'string',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getLists',
+        },
         required: true,
         default: '',
         displayOptions: {
@@ -267,12 +272,16 @@ export class MailwizzNode implements INodeType {
             useCategoryMapping: [false],
           },
         },
-        description: 'ID of the list to send the campaign to',
+        description: 'List to send the campaign to',
       },
       {
-        displayName: 'Segment ID',
+        displayName: 'Segment',
         name: 'segmentId',
-        type: 'string',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getSegments',
+          loadOptionsDependsOn: ['listId'],
+        },
         required: false,
         default: '',
         displayOptions: {
@@ -282,7 +291,7 @@ export class MailwizzNode implements INodeType {
             useCategoryMapping: [false],
           },
         },
-        description: 'ID of the segment to send the campaign to (optional)',
+        description: 'Segment to send the campaign to (optional)',
       },
       {
         displayName: 'Category Mapping',
@@ -314,19 +323,26 @@ export class MailwizzNode implements INodeType {
                 required: true,
               },
               {
-                displayName: 'Mailwizz List ID',
+                displayName: 'Mailwizz List',
                 name: 'mwListId',
-                type: 'string',
+                type: 'options',
+                typeOptions: {
+                  loadOptionsMethod: 'getLists',
+                },
                 default: '',
-                description: 'List ID in Mailwizz',
+                description: 'List in Mailwizz',
                 required: true,
               },
               {
-                displayName: 'Mailwizz Segment ID',
+                displayName: 'Mailwizz Segment',
                 name: 'mwSegmentId',
-                type: 'string',
+                type: 'options',
+                typeOptions: {
+                  loadOptionsMethod: 'getSegments',
+                  loadOptionsDependsOn: ['mwListId'],
+                },
                 default: '',
-                description: 'Segment ID in Mailwizz (optional)',
+                description: 'Segment in Mailwizz (optional)',
               },
             ],
           },
@@ -334,9 +350,12 @@ export class MailwizzNode implements INodeType {
         description: 'Map WordPress categories to Mailwizz lists and segments',
       },
       {
-        displayName: 'Default List ID (fallback)',
+        displayName: 'Default List',
         name: 'defaultListId',
-        type: 'string',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getLists',
+        },
         required: true,
         default: '',
         displayOptions: {
@@ -346,12 +365,16 @@ export class MailwizzNode implements INodeType {
             useCategoryMapping: [true],
           },
         },
-        description: 'Default list ID to use if no category mapping matches',
+        description: 'Default list to use if no category mapping matches',
       },
       {
-        displayName: 'Default Segment ID (fallback)',
+        displayName: 'Default Segment',
         name: 'defaultSegmentId',
-        type: 'string',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getSegments',
+          loadOptionsDependsOn: ['defaultListId'],
+        },
         required: false,
         default: '',
         displayOptions: {
@@ -361,7 +384,7 @@ export class MailwizzNode implements INodeType {
             useCategoryMapping: [true],
           },
         },
-        description: 'Default segment ID to use if no category mapping matches (optional)',
+        description: 'Default segment to use if no category mapping matches (optional)',
       },
       {
         displayName: 'WordPress Categories Field',
@@ -401,9 +424,12 @@ export class MailwizzNode implements INodeType {
         description: 'Whether to track URLs in the campaign',
       },
       {
-        displayName: 'Template ID',
+        displayName: 'Template',
         name: 'templateId',
-        type: 'string',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getTemplates',
+        },
         required: true,
         default: '',
         displayOptions: {
@@ -412,7 +438,7 @@ export class MailwizzNode implements INodeType {
             operation: ['create'],
           },
         },
-        description: 'ID of the template to use for the campaign',
+        description: 'Template to use for the campaign',
       },
       {
         displayName: 'Use WordPress Data for Subject',
@@ -440,6 +466,71 @@ export class MailwizzNode implements INodeType {
         },
         default: 'post_title',
         description: 'Field from WordPress post to use as subject (e.g. post_title)',
+      },
+      // Nowe opcje do przekazywania danych WordPress
+      {
+        displayName: 'Pass WordPress Data to Template',
+        name: 'passWordPressData',
+        type: 'boolean',
+        default: true,
+        displayOptions: {
+          show: {
+            resource: ['campaign'],
+            operation: ['create'],
+          },
+        },
+        description: 'Whether to pass WordPress post data (featured image, excerpt, date, link) to the template',
+      },
+      {
+        displayName: 'WordPress Post Fields',
+        name: 'wpDataFields',
+        type: 'collection',
+        placeholder: 'Add Field Mapping',
+        default: {},
+        displayOptions: {
+          show: {
+            resource: ['campaign'],
+            operation: ['create'],
+            passWordPressData: [true],
+          },
+        },
+        options: [
+          {
+            displayName: 'Featured Image Field',
+            name: 'featuredImageField',
+            type: 'string',
+            default: 'featured_image',
+            description: 'Field in WordPress data that contains the featured image URL',
+          },
+          {
+            displayName: 'Excerpt Field',
+            name: 'excerptField',
+            type: 'string',
+            default: 'post_excerpt',
+            description: 'Field in WordPress data that contains the post excerpt',
+          },
+          {
+            displayName: 'Date Field',
+            name: 'dateField',
+            type: 'string',
+            default: 'post_date',
+            description: 'Field in WordPress data that contains the post date',
+          },
+          {
+            displayName: 'Link Field',
+            name: 'linkField',
+            type: 'string',
+            default: 'link',
+            description: 'Field in WordPress data that contains the post link',
+          },
+          {
+            displayName: 'Content Field',
+            name: 'contentField',
+            type: 'string',
+            default: 'post_content',
+            description: 'Field in WordPress data that contains the post content',
+          },
+        ],
       },
       // List Parameters
       {
@@ -503,6 +594,139 @@ export class MailwizzNode implements INodeType {
     ],
   };
 
+  // Metody do dynamicznego ładowania opcji
+  async loadOptions(
+      this: ILoadOptionsFunctions
+  ): Promise<INodePropertyOptions[]> {
+    const returnData: INodePropertyOptions[] = [];
+    const methodName = this.getNodeParameter('loadOptionsMethod') as string;
+
+    // Get credentials
+    const credentials = await this.getCredentials('mailwizzApi');
+
+    if (!credentials) {
+      throw new Error('No credentials provided!');
+    }
+
+    // Konfiguracja biblioteki node-mailwizz
+    const config = {
+      publicKey: credentials.apiKey as string,
+      secret: credentials.apiKey as string,
+      baseUrl: credentials.baseUrl as string,
+    };
+
+    // Inicjalizacja klientów API
+    const listsClient = new Lists(config);
+    const templatesClient = new Templates(config);
+
+    // Metoda do pobierania list
+    if (methodName === 'getLists') {
+      try {
+        const response = await listsClient.getLists({
+          page: 1,
+          per_page: 100,
+        });
+
+        if (response && response.data && response.data.records) {
+          for (const list of response.data.records) {
+            returnData.push({
+              name: list.general.name as string,
+              value: list.general.list_uid as string,
+            });
+          }
+        }
+        return returnData;
+      } catch (error) {
+        console.error('Error loading lists:', error);
+        return [];
+      }
+    }
+
+    // Metoda do pobierania segmentów dla określonej listy
+    if (methodName === 'getSegments') {
+      try {
+        // Pobierz ID listy
+        let listId = '';
+
+        // Sprawdź, czy jesteśmy w mapowaniu kategorii
+        const ctx = this.getNodeParameter('__itemIndex') as number;
+        const mapping = this.getNodeParameter('mapping', '') as string;
+
+        if (mapping) {
+          // Jesteśmy w mapowaniu kategorii
+          listId = this.getNodeParameter('mwListId') as string;
+        } else {
+          // Jesteśmy na głównym poziomie
+          const dependsOn = this.getNodeParameter('loadOptionsDependsOn') as string[];
+          if (dependsOn && dependsOn.includes('listId')) {
+            listId = this.getNodeParameter('listId') as string;
+          } else if (dependsOn && dependsOn.includes('defaultListId')) {
+            listId = this.getNodeParameter('defaultListId') as string;
+          }
+        }
+
+        if (!listId) {
+          return [{
+            name: '-- Select a list first --',
+            value: '',
+          }];
+        }
+
+        const response = await listsClient.getListSegments({
+          listID: listId,
+        });
+
+        if (response && response.data && response.data.records) {
+          for (const segment of response.data.records) {
+            returnData.push({
+              name: segment.name as string,
+              value: segment.segment_uid as string,
+            });
+          }
+        }
+
+        return [
+          {
+            name: '-- No segment (send to entire list) --',
+            value: '',
+          },
+          ...returnData
+        ];
+      } catch (error) {
+        console.error('Error loading segments:', error);
+        return [{
+          name: '-- No segments available --',
+          value: '',
+        }];
+      }
+    }
+
+    // Metoda do pobierania szablonów
+    if (methodName === 'getTemplates') {
+      try {
+        const response = await templatesClient.getTemplates({
+          page: 1,
+          per_page: 100,
+        });
+
+        if (response && response.data && response.data.records) {
+          for (const template of response.data.records) {
+            returnData.push({
+              name: template.name as string,
+              value: template.template_uid as string,
+            });
+          }
+        }
+        return returnData;
+      } catch (error) {
+        console.error('Error loading templates:', error);
+        return [];
+      }
+    }
+
+    return returnData;
+  }
+
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
@@ -515,7 +739,6 @@ export class MailwizzNode implements INodeType {
     }
 
     // Skonfiguruj bibliotekę node-mailwizz używając pojedynczego klucza API
-    // (biblioteka używa osobno publicKey i secret, ale możemy użyć tego samego klucza API dla obu)
     const config = {
       publicKey: credentials.apiKey as string,
       secret: credentials.apiKey as string, // Używamy tego samego klucza API jako sekret
@@ -542,6 +765,7 @@ export class MailwizzNode implements INodeType {
             const fromEmail = this.getNodeParameter('fromEmail', i) as string;
             const useWpSubject = this.getNodeParameter('useWpSubject', i) as boolean;
             const useCategoryMapping = this.getNodeParameter('useCategoryMapping', i, false) as boolean;
+            const passWordPressData = this.getNodeParameter('passWordPressData', i, true) as boolean;
 
             // Handle subject based on WordPress data or direct input
             let subject = '';
@@ -655,8 +879,8 @@ export class MailwizzNode implements INodeType {
             // Format sendAt as YYYY-MM-DD HH:MM:SS
             const sendAtFormatted = new Date(sendAt).toISOString().slice(0, 19).replace('T', ' ');
 
-            // Create campaign
-            const campaign = await campaignsClient.create({
+            // Prepare campaign data
+            const campaignData: any = {
               name,
               type,
               fromName,
@@ -668,7 +892,99 @@ export class MailwizzNode implements INodeType {
               segmentId,
               urlTracking,
               templateId,
-            });
+            };
+
+            // Handle WordPress data for template
+            if (passWordPressData) {
+              const wpDataFields = this.getNodeParameter('wpDataFields', i, {}) as {
+                featuredImageField?: string;
+                excerptField?: string;
+                dateField?: string;
+                linkField?: string;
+                contentField?: string;
+              };
+
+              // Prepare template content
+              let templateContent = '';
+
+              // Get the template content first
+              try {
+                const templateResponse = await templatesClient.getTemplate({
+                  templateUid: templateId,
+                });
+
+                if (templateResponse && templateResponse.data && templateResponse.data.content) {
+                  templateContent = templateResponse.data.content as string;
+                }
+              } catch (error) {
+                console.error('Error getting template content:', error);
+              }
+
+              // If we have template content, replace placeholders with WordPress data
+              if (templateContent) {
+                // Get WordPress data
+                const featuredImageField = wpDataFields.featuredImageField || 'featured_image';
+                const excerptField = wpDataFields.excerptField || 'post_excerpt';
+                const dateField = wpDataFields.dateField || 'post_date';
+                const linkField = wpDataFields.linkField || 'link';
+                const contentField = wpDataFields.contentField || 'post_content';
+
+                // Replace placeholders in template
+                if (items[i].json[featuredImageField]) {
+                  templateContent = templateContent.replace(
+                      /\[FEATURED_IMAGE\]/g,
+                      items[i].json[featuredImageField] as string
+                  );
+                }
+
+                if (items[i].json[excerptField]) {
+                  templateContent = templateContent.replace(
+                      /\[POST_EXCERPT\]/g,
+                      items[i].json[excerptField] as string
+                  );
+                }
+
+                if (items[i].json[dateField]) {
+                  const dateValue = items[i].json[dateField];
+                  const formattedDate = typeof dateValue === 'string'
+                      ? new Date(dateValue).toLocaleDateString()
+                      : dateValue;
+
+                  templateContent = templateContent.replace(
+                      /\[POST_DATE\]/g,
+                      formattedDate as string
+                  );
+                }
+
+                if (items[i].json[linkField]) {
+                  templateContent = templateContent.replace(
+                      /\[POST_LINK\]/g,
+                      items[i].json[linkField] as string
+                  );
+                }
+
+                if (items[i].json[contentField]) {
+                  templateContent = templateContent.replace(
+                      /\[POST_CONTENT\]/g,
+                      items[i].json[contentField] as string
+                  );
+                }
+
+                // Add title replacement as well
+                if (items[i].json[this.getNodeParameter('wpSubjectField', i) as string]) {
+                  templateContent = templateContent.replace(
+                      /\[POST_TITLE\]/g,
+                      items[i].json[this.getNodeParameter('wpSubjectField', i) as string] as string
+                  );
+                }
+
+                // Add the modified template content to the campaign data
+                campaignData.content = templateContent;
+              }
+            }
+
+            // Create campaign
+            const campaign = await campaignsClient.create(campaignData);
 
             returnData.push({
               json: campaign as unknown as IDataObject,

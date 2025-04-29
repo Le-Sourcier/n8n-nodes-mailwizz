@@ -67,162 +67,175 @@ You can import this workflow directly into n8n:
 
 ```json
 {
-  "nodes": [
-    {
-      "parameters": {
-        "authentication": "genericCredentialType",
-        "operation": "getAll",
-        "postType": "post",
-        "postStatus": "publish",
-        "returnAll": false,
-        "limit": 1,
-        "options": {
-          "filterByStatus": true,
-          "filterByTaxonomies": false
-        }
-      },
-      "name": "WordPress",
-      "type": "n8n-nodes-base.wordpress",
-      "typeVersion": 1,
-      "position": [
-        250,
-        300
-      ],
-      "credentials": {
-        "wordpressApi": {
-          "id": "1",
-          "name": "WordPress account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "string": [
-            {
-              "value1": "={{$json[\"status\"]}}",
-              "operation": "equal",
-              "value2": "publish"
+   "nodes": [
+      {
+         "parameters": {
+            "authentication": "genericCredentialType",
+            "operation": "getAll",
+            "postType": "post",
+            "postStatus": "publish",
+            "returnAll": false,
+            "limit": 1,
+            "options": {
+               "filterByStatus": true,
+               "filterByTaxonomies": false
             }
-          ]
-        }
-      },
-      "name": "IF",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        460,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "campaign",
-        "operation": "create",
-        "name": "=WordPress Post: {{$json[\"post_title\"]}}",
-        "type": "regular",
-        "fromName": "Your Name",
-        "fromEmail": "your-email@example.com",
-        "replyTo": "reply-to@example.com",
-        "sendAt": "={{$now.plus(1, \"hours\").format(\"YYYY-MM-DD HH:mm:ss\")}}",
-        "useCategoryMapping": true,
-        "categoryMapping": {
-          "mapping": [
-            {
-              "wpCategory": "News",
-              "mwListId": "your-list-id",
-              "mwSegmentId": "news-segment-id"
-            },
-            {
-              "wpCategory": "Tutorials",
-              "mwListId": "your-list-id",
-              "mwSegmentId": "tutorials-segment-id"
-            },
-            {
-              "wpCategory": "Analysis",
-              "mwListId": "your-list-id",
-              "mwSegmentId": "analysis-segment-id"
+         },
+         "id": "3b7eee8d-bebb-48cf-8c23-6d61db76a1d5",
+         "name": "WordPress",
+         "type": "n8n-nodes-base.wordpress",
+         "typeVersion": 1,
+         "position": [
+            250,
+            300
+         ],
+         "credentials": {
+            "wordpressApi": {
+               "id": "1",
+               "name": "WordPress account"
             }
-          ]
-        },
-        "defaultListId": "your-default-list-id",
-        "defaultSegmentId": "your-default-segment-id",
-        "wpCategoriesField": "categories",
-        "urlTracking": "yes",
-        "templateId": "your-template-id",
-        "useWpSubject": true,
-        "wpSubjectField": "post_title"
+         }
       },
-      "name": "Mailwizz",
-      "type": "n8n-nodes-base.mailwizz",
-      "typeVersion": 1,
-      "position": [
-        670,
-        300
-      ],
-      "credentials": {
-        "mailwizzApi": {
-          "id": "2",
-          "name": "Mailwizz account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "channel": "campaign-notifications",
-        "text": "=Created a new campaign based on post: {{$node[\"Mailwizz\"].json[\"campaign_uid\"]}}",
-        "otherOptions": {}
+      {
+         "parameters": {
+            "conditions": {
+               "string": [
+                  {
+                     "value1": "={{$json[\"status\"]}}",
+                     "operation": "equal",
+                     "value2": "publish"
+                  }
+               ]
+            }
+         },
+         "id": "a95d9673-8404-4fea-b813-aa807a28c979",
+         "name": "IF",
+         "type": "n8n-nodes-base.if",
+         "typeVersion": 1,
+         "position": [
+            460,
+            300
+         ]
       },
-      "name": "Slack",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 1,
-      "position": [
-        880,
-        300
-      ],
-      "credentials": {
-        "slackApi": {
-          "id": "3",
-          "name": "Slack account"
-        }
+      {
+         "parameters": {
+            "resource": "campaign",
+            "operation": "create",
+            "name": "=WordPress Post: {{$json[\"post_title\"]}}",
+            "type": "regular",
+            "fromName": "Your Name",
+            "fromEmail": "your-email@example.com",
+            "replyTo": "reply-to@example.com",
+            "sendAt": "={{$now.plus(1, \"hours\").format(\"YYYY-MM-DD HH:mm:ss\")}}",
+            "useCategoryMapping": true,
+            "categoryMapping": {
+               "mapping": [
+                  {
+                     "wpCategory": "News",
+                     "mwListId": "your-list-id",
+                     "mwSegmentId": "news-segment-id"
+                  },
+                  {
+                     "wpCategory": "Tutorials",
+                     "mwListId": "your-list-id",
+                     "mwSegmentId": "tutorials-segment-id"
+                  },
+                  {
+                     "wpCategory": "Analysis",
+                     "mwListId": "your-list-id",
+                     "mwSegmentId": "analysis-segment-id"
+                  }
+               ]
+            },
+            "defaultListId": "your-default-list-id",
+            "defaultSegmentId": "your-default-segment-id",
+            "wpCategoriesField": "categories",
+            "urlTracking": "yes",
+            "templateId": "your-template-id",
+            "useWpSubject": true,
+            "wpSubjectField": "post_title"
+         },
+         "id": "4e80f0c8-3ae4-4a93-b5e0-c1ec6a6d84dd",
+         "name": "Mailwizz",
+         "type": "n8n-nodes-base.mailwizz",
+         "typeVersion": 1,
+         "position": [
+            670,
+            300
+         ],
+         "credentials": {
+            "mailwizzApi": {
+               "id": "2",
+               "name": "Mailwizz account"
+            }
+         }
+      },
+      {
+         "parameters": {
+            "channel": "campaign-notifications",
+            "text": "=Created a new campaign based on post: {{$node[\"Mailwizz\"].json[\"campaign_uid\"]}}",
+            "otherOptions": {}
+         },
+         "id": "f4b84eef-c6e0-4e5a-9bfc-6c7acbf9c716",
+         "name": "Slack",
+         "type": "n8n-nodes-base.slack",
+         "typeVersion": 1,
+         "position": [
+            880,
+            300
+         ],
+         "credentials": {
+            "slackApi": {
+               "id": "3",
+               "name": "Slack account"
+            }
+         }
       }
-    }
-  ],
-  "connections": {
-    "WordPress": {
-      "main": [
-        [
-          {
-            "node": "IF",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF": {
-      "true": [
-        [
-          {
-            "node": "Mailwizz",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Mailwizz": {
-      "main": [
-        [
-          {
-            "node": "Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  }
+   ],
+   "connections": {
+      "WordPress": {
+         "main": [
+            [
+               {
+                  "node": "IF",
+                  "type": "main",
+                  "index": 0
+               }
+            ]
+         ]
+      },
+      "IF": {
+         "true": [
+            [
+               {
+                  "node": "Mailwizz",
+                  "type": "main",
+                  "index": 0
+               }
+            ]
+         ]
+      },
+      "Mailwizz": {
+         "main": [
+            [
+               {
+                  "node": "Slack",
+                  "type": "main",
+                  "index": 0
+               }
+            ]
+         ]
+      }
+   },
+   "active": false,
+   "settings": {
+      "executionOrder": "v1"
+   },
+   "tag": "Mailwizz Integration",
+   "meta": {
+      "instanceId": "example-instance-id"
+   },
+   "versionId": "1c2e8b8d-a5e4-4bda-a7e4-dfc6f7823b26"
 }
 ```
 
@@ -356,162 +369,175 @@ Możesz zaimportować ten przepływ bezpośrednio do n8n:
 
 ```json
 {
-  "nodes": [
-    {
-      "parameters": {
-        "authentication": "genericCredentialType",
-        "operation": "getAll",
-        "postType": "post",
-        "postStatus": "publish",
-        "returnAll": false,
-        "limit": 1,
-        "options": {
-          "filterByStatus": true,
-          "filterByTaxonomies": false
-        }
-      },
-      "name": "WordPress",
-      "type": "n8n-nodes-base.wordpress",
-      "typeVersion": 1,
-      "position": [
-        250,
-        300
-      ],
-      "credentials": {
-        "wordpressApi": {
-          "id": "1",
-          "name": "WordPress account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "string": [
-            {
-              "value1": "={{$json[\"status\"]}}",
-              "operation": "equal",
-              "value2": "publish"
+   "nodes": [
+      {
+         "parameters": {
+            "authentication": "genericCredentialType",
+            "operation": "getAll",
+            "postType": "post",
+            "postStatus": "publish",
+            "returnAll": false,
+            "limit": 1,
+            "options": {
+               "filterByStatus": true,
+               "filterByTaxonomies": false
             }
-          ]
-        }
-      },
-      "name": "IF",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        460,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "campaign",
-        "operation": "create",
-        "name": "=WordPress Post: {{$json[\"post_title\"]}}",
-        "type": "regular",
-        "fromName": "Twoje Imię",
-        "fromEmail": "twoj-email@example.com",
-        "replyTo": "reply-to@example.com",
-        "sendAt": "={{$now.plus(1, \"hours\").format(\"YYYY-MM-DD HH:mm:ss\")}}",
-        "useCategoryMapping": true,
-        "categoryMapping": {
-          "mapping": [
-            {
-              "wpCategory": "Newsy",
-              "mwListId": "twoje-id-listy",
-              "mwSegmentId": "id-segmentu-news"
-            },
-            {
-              "wpCategory": "Poradniki",
-              "mwListId": "twoje-id-listy",
-              "mwSegmentId": "id-segmentu-poradniki"
-            },
-            {
-              "wpCategory": "Analizy",
-              "mwListId": "twoje-id-listy",
-              "mwSegmentId": "id-segmentu-analizy"
+         },
+         "id": "3b7eee8d-bebb-48cf-8c23-6d61db76a1d5",
+         "name": "WordPress",
+         "type": "n8n-nodes-base.wordpress",
+         "typeVersion": 1,
+         "position": [
+            250,
+            300
+         ],
+         "credentials": {
+            "wordpressApi": {
+               "id": "1",
+               "name": "WordPress account"
             }
-          ]
-        },
-        "defaultListId": "twoje-domyslne-id-listy",
-        "defaultSegmentId": "twoje-domyslne-id-segmentu",
-        "wpCategoriesField": "categories",
-        "urlTracking": "yes",
-        "templateId": "twoje-id-szablonu",
-        "useWpSubject": true,
-        "wpSubjectField": "post_title"
+         }
       },
-      "name": "Mailwizz",
-      "type": "n8n-nodes-base.mailwizz",
-      "typeVersion": 1,
-      "position": [
-        670,
-        300
-      ],
-      "credentials": {
-        "mailwizzApi": {
-          "id": "2",
-          "name": "Mailwizz account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "channel": "powiadomienia-kampanii",
-        "text": "=Utworzono nową kampanię na podstawie wpisu: {{$node[\"Mailwizz\"].json[\"campaign_uid\"]}}",
-        "otherOptions": {}
+      {
+         "parameters": {
+            "conditions": {
+               "string": [
+                  {
+                     "value1": "={{$json[\"status\"]}}",
+                     "operation": "equal",
+                     "value2": "publish"
+                  }
+               ]
+            }
+         },
+         "id": "a95d9673-8404-4fea-b813-aa807a28c979",
+         "name": "IF",
+         "type": "n8n-nodes-base.if",
+         "typeVersion": 1,
+         "position": [
+            460,
+            300
+         ]
       },
-      "name": "Slack",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 1,
-      "position": [
-        880,
-        300
-      ],
-      "credentials": {
-        "slackApi": {
-          "id": "3",
-          "name": "Slack account"
-        }
+      {
+         "parameters": {
+            "resource": "campaign",
+            "operation": "create",
+            "name": "=WordPress Post: {{$json[\"post_title\"]}}",
+            "type": "regular",
+            "fromName": "Your Name",
+            "fromEmail": "your-email@example.com",
+            "replyTo": "reply-to@example.com",
+            "sendAt": "={{$now.plus(1, \"hours\").format(\"YYYY-MM-DD HH:mm:ss\")}}",
+            "useCategoryMapping": true,
+            "categoryMapping": {
+               "mapping": [
+                  {
+                     "wpCategory": "News",
+                     "mwListId": "your-list-id",
+                     "mwSegmentId": "news-segment-id"
+                  },
+                  {
+                     "wpCategory": "Tutorials",
+                     "mwListId": "your-list-id",
+                     "mwSegmentId": "tutorials-segment-id"
+                  },
+                  {
+                     "wpCategory": "Analysis",
+                     "mwListId": "your-list-id",
+                     "mwSegmentId": "analysis-segment-id"
+                  }
+               ]
+            },
+            "defaultListId": "your-default-list-id",
+            "defaultSegmentId": "your-default-segment-id",
+            "wpCategoriesField": "categories",
+            "urlTracking": "yes",
+            "templateId": "your-template-id",
+            "useWpSubject": true,
+            "wpSubjectField": "post_title"
+         },
+         "id": "4e80f0c8-3ae4-4a93-b5e0-c1ec6a6d84dd",
+         "name": "Mailwizz",
+         "type": "n8n-nodes-base.mailwizz",
+         "typeVersion": 1,
+         "position": [
+            670,
+            300
+         ],
+         "credentials": {
+            "mailwizzApi": {
+               "id": "2",
+               "name": "Mailwizz account"
+            }
+         }
+      },
+      {
+         "parameters": {
+            "channel": "campaign-notifications",
+            "text": "=Created a new campaign based on post: {{$node[\"Mailwizz\"].json[\"campaign_uid\"]}}",
+            "otherOptions": {}
+         },
+         "id": "f4b84eef-c6e0-4e5a-9bfc-6c7acbf9c716",
+         "name": "Slack",
+         "type": "n8n-nodes-base.slack",
+         "typeVersion": 1,
+         "position": [
+            880,
+            300
+         ],
+         "credentials": {
+            "slackApi": {
+               "id": "3",
+               "name": "Slack account"
+            }
+         }
       }
-    }
-  ],
-  "connections": {
-    "WordPress": {
-      "main": [
-        [
-          {
-            "node": "IF",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF": {
-      "true": [
-        [
-          {
-            "node": "Mailwizz",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Mailwizz": {
-      "main": [
-        [
-          {
-            "node": "Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  }
+   ],
+   "connections": {
+      "WordPress": {
+         "main": [
+            [
+               {
+                  "node": "IF",
+                  "type": "main",
+                  "index": 0
+               }
+            ]
+         ]
+      },
+      "IF": {
+         "true": [
+            [
+               {
+                  "node": "Mailwizz",
+                  "type": "main",
+                  "index": 0
+               }
+            ]
+         ]
+      },
+      "Mailwizz": {
+         "main": [
+            [
+               {
+                  "node": "Slack",
+                  "type": "main",
+                  "index": 0
+               }
+            ]
+         ]
+      }
+   },
+   "active": false,
+   "settings": {
+      "executionOrder": "v1"
+   },
+   "tag": "Mailwizz Integration",
+   "meta": {
+      "instanceId": "example-instance-id"
+   },
+   "versionId": "1c2e8b8d-a5e4-4bda-a7e4-dfc6f7823b26"
 }
 ```
 
