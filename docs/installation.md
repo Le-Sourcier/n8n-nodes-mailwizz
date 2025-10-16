@@ -23,7 +23,7 @@ If you're running n8n in a Cloudron environment, you'll need to add the node to 
    - Add or modify the following lines:
    ```bash
    # Add n8n-nodes-mailwizz-ls to the list of modules
-   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.3"
+   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.4"
    
    # Add mailwizz to the list of allowed external modules
    export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
@@ -42,7 +42,7 @@ If you're running n8n in a standard environment:
 1. **Install the Node**
    - Run the following command in your n8n installation directory:
    ```bash
-   npm install n8n-nodes-mailwizz-ls@2.0.3
+   npm install n8n-nodes-mailwizz-ls@2.0.4
    ```
 
 2. **Restart n8n**
@@ -81,16 +81,26 @@ The MailWizz node can be used for various operations:
    - Operation: Create
    - Configure the campaign parameters, including name, type, from details, etc.
    - Optionally use category mapping to determine lists and segments based on WordPress post categories
-
-2. **Get Lists**
+2. **Manage Campaigns**
+   - Resource: Campaign
+   - Operation: Get
+   - Retrieve an individual campaign for auditing or re-use inside your workflow
+3. **Manage Lists**
    - Resource: List
-   - Operation: Get All / Get
-   - Retrieve all lists or a specific list from MailWizz
-
-3. **Get Templates**
+   - Operations: Create / Get / Get All
+   - Create brand-new lists (including company details, confirmation options, and notifications) or retrieve existing lists
+4. **Manage Templates**
    - Resource: Template
-   - Operation: Get All / Get
-   - Retrieve all templates or a specific template from MailWizz
+   - Operations: Create / Get / Get All
+   - Create HTML templates with optional plain-text and inline CSS flags, or fetch existing templates
+5. **Bulk Create Subscribers**
+   - Resource: Subscriber
+   - Operation: Create Bulk
+   - Push one or more subscribers to a list using a JSON array payload
+6. **Transactional Emails**
+   - Resource: Transactional Email
+   - Operations: Create / Get / Get All
+   - Send immediate or scheduled transactional emails, or inspect existing transactional email logs
 
 For a complete example workflow, see [Example Workflow](workflow-example.md).
 

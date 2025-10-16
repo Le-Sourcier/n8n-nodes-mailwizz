@@ -223,6 +223,12 @@ class Mailwizz {
                     },
                     options: [
                         {
+                            name: 'Create',
+                            value: 'create',
+                            action: 'Create a list',
+                            description: 'Create a new list in MailWizz',
+                        },
+                        {
                             name: 'Get',
                             value: 'get',
                             action: 'Get a list',
@@ -746,6 +752,270 @@ class Mailwizz {
                     },
                 },
                 {
+                    displayName: 'List Name',
+                    name: 'listName',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Default From Email',
+                    name: 'listFromEmail',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Default From Name',
+                    name: 'listFromName',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Default Reply-To',
+                    name: 'listReplyTo',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Company Name',
+                    name: 'listCompanyName',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Company Address 1',
+                    name: 'listAddress1',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Company Address 2',
+                    name: 'listAddress2',
+                    type: 'string',
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Company Country',
+                    name: 'listCountry',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Company State',
+                    name: 'listState',
+                    type: 'string',
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Company City',
+                    name: 'listCity',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Company Zip',
+                    name: 'listZip',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Company Phone',
+                    name: 'listPhone',
+                    type: 'string',
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'List Options',
+                    name: 'listOptions',
+                    type: 'collection',
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                    options: [
+                        {
+                            displayName: 'Confirmation Email Subject',
+                            name: 'subject',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'Confirmation Email From Name',
+                            name: 'fromName',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'Confirmation Email From Email',
+                            name: 'fromEmail',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'Confirmation Email Reply-To',
+                            name: 'replyTo',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'Welcome Email Subject',
+                            name: 'welcomeSubject',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'Send Welcome Email',
+                            name: 'sendWelcome',
+                            type: 'options',
+                            options: [
+                                {
+                                    name: 'No',
+                                    value: 'no',
+                                },
+                                {
+                                    name: 'Yes',
+                                    value: 'yes',
+                                },
+                            ],
+                            default: 'yes',
+                        },
+                        {
+                            displayName: 'Send Confirmation Email',
+                            name: 'sendConfirmation',
+                            type: 'options',
+                            options: [
+                                {
+                                    name: 'No',
+                                    value: 'no',
+                                },
+                                {
+                                    name: 'Yes',
+                                    value: 'yes',
+                                },
+                            ],
+                            default: 'yes',
+                        },
+                    ],
+                },
+                {
+                    displayName: 'Notifications',
+                    name: 'listNotifications',
+                    type: 'collection',
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                    options: [
+                        {
+                            displayName: 'Subscriber Notifications',
+                            name: 'subscribe',
+                            type: 'string',
+                            default: '',
+                            description: 'Email address to notify on new subscriber',
+                        },
+                        {
+                            displayName: 'Unsubscriber Notifications',
+                            name: 'unsubscribe',
+                            type: 'string',
+                            default: '',
+                            description: 'Email address to notify on unsubscribe',
+                        },
+                        {
+                            displayName: 'Daily Summary',
+                            name: 'daily',
+                            type: 'string',
+                            default: '',
+                            description: 'Email address to receive daily summary',
+                        },
+                    ],
+                },
+                {
                     displayName: 'Template ID',
                     name: 'templateId',
                     type: 'string',
@@ -1116,7 +1386,7 @@ class Mailwizz {
         };
     }
     async execute() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1;
         const items = this.getInputData();
         const returnData = [];
         for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
@@ -1252,6 +1522,76 @@ class Mailwizz {
                     continue;
                 }
                 if (resource === 'list') {
+                    if (operation === 'create') {
+                        const name = ensureString(this.getNodeParameter('listName', itemIndex));
+                        const fromEmail = ensureString(this.getNodeParameter('listFromEmail', itemIndex));
+                        const fromName = ensureString(this.getNodeParameter('listFromName', itemIndex));
+                        const replyTo = ensureString(this.getNodeParameter('listReplyTo', itemIndex));
+                        const company = ensureString(this.getNodeParameter('listCompanyName', itemIndex));
+                        const address1 = ensureString(this.getNodeParameter('listAddress1', itemIndex));
+                        const address2 = (_h = asString(this.getNodeParameter('listAddress2', itemIndex, ''))) !== null && _h !== void 0 ? _h : '';
+                        const country = ensureString(this.getNodeParameter('listCountry', itemIndex));
+                        const state = (_j = asString(this.getNodeParameter('listState', itemIndex, ''))) !== null && _j !== void 0 ? _j : '';
+                        const city = ensureString(this.getNodeParameter('listCity', itemIndex));
+                        const zip = ensureString(this.getNodeParameter('listZip', itemIndex));
+                        const phone = (_k = asString(this.getNodeParameter('listPhone', itemIndex, ''))) !== null && _k !== void 0 ? _k : '';
+                        const options = this.getNodeParameter('listOptions', itemIndex, {});
+                        const notifications = this.getNodeParameter('listNotifications', itemIndex, {});
+                        const listPayload = {
+                            general: {
+                                name,
+                                description: name,
+                            },
+                            defaults: {
+                                from_name: fromName,
+                                from_email: fromEmail,
+                                reply_to: replyTo,
+                            },
+                            company: {
+                                name: company,
+                                address_1: address1,
+                                address_2: address2,
+                                country,
+                                zone: state,
+                                city,
+                                zip,
+                                phone,
+                            },
+                        };
+                        const optionPayload = {};
+                        if (options.subject)
+                            optionPayload.email_subscribe_subject = ensureString(options.subject);
+                        if (options.fromName)
+                            optionPayload.email_subscribe_from_name = ensureString(options.fromName);
+                        if (options.fromEmail)
+                            optionPayload.email_subscribe_from_email = ensureString(options.fromEmail);
+                        if (options.replyTo)
+                            optionPayload.email_subscribe_reply_to = ensureString(options.replyTo);
+                        if (options.welcomeSubject)
+                            optionPayload.email_welcome_subject = ensureString(options.welcomeSubject);
+                        if (options.sendWelcome)
+                            optionPayload.send_welcome_email = ensureString(options.sendWelcome, 'yes');
+                        if (options.sendConfirmation)
+                            optionPayload.send_subscribe_confirmation = ensureString(options.sendConfirmation, 'yes');
+                        if (Object.keys(optionPayload).length > 0) {
+                            listPayload.options = optionPayload;
+                        }
+                        const notificationPayload = {};
+                        if (notifications.subscribe)
+                            notificationPayload.subscribe = ensureString(notifications.subscribe);
+                        if (notifications.unsubscribe)
+                            notificationPayload.unsubscribe = ensureString(notifications.unsubscribe);
+                        if (notifications.daily)
+                            notificationPayload.daily = ensureString(notifications.daily);
+                        if (Object.keys(notificationPayload).length > 0) {
+                            listPayload.notifications = notificationPayload;
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/lists', { list: listPayload }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_l = response) !== null && _l !== void 0 ? _l : {},
+                        });
+                        continue;
+                    }
                     if (operation === 'get') {
                         const listId = ensureString(this.getNodeParameter('listId', itemIndex));
                         if (!listId) {
@@ -1259,17 +1599,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_h = response) !== null && _h !== void 0 ? _h : {},
+                            json: (_m = response) !== null && _m !== void 0 ? _m : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_j = pagination.page) !== null && _j !== void 0 ? _j : 1) || 1;
-                        const perPage = Number((_k = pagination.perPage) !== null && _k !== void 0 ? _k : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_o = pagination.page) !== null && _o !== void 0 ? _o : 1) || 1;
+                        const perPage = Number((_p = pagination.perPage) !== null && _p !== void 0 ? _p : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/lists', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_l = response) !== null && _l !== void 0 ? _l : {},
+                            json: (_q = response) !== null && _q !== void 0 ? _q : {},
                         });
                         continue;
                     }
@@ -1312,7 +1652,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers/bulk`, { subscribers: subscribersPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_m = response) !== null && _m !== void 0 ? _m : {},
+                            json: (_r = response) !== null && _r !== void 0 ? _r : {},
                         });
                         continue;
                     }
@@ -1345,7 +1685,7 @@ class Mailwizz {
                             template: templatePayload,
                         }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_o = response) !== null && _o !== void 0 ? _o : {},
+                            json: (_s = response) !== null && _s !== void 0 ? _s : {},
                         });
                         continue;
                     }
@@ -1356,17 +1696,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_p = response) !== null && _p !== void 0 ? _p : {},
+                            json: (_t = response) !== null && _t !== void 0 ? _t : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_q = pagination.page) !== null && _q !== void 0 ? _q : 1) || 1;
-                        const perPage = Number((_r = pagination.perPage) !== null && _r !== void 0 ? _r : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_u = pagination.page) !== null && _u !== void 0 ? _u : 1) || 1;
+                        const perPage = Number((_v = pagination.perPage) !== null && _v !== void 0 ? _v : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/templates', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_s = response) !== null && _s !== void 0 ? _s : {},
+                            json: (_w = response) !== null && _w !== void 0 ? _w : {},
                         });
                         continue;
                     }
@@ -1411,7 +1751,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/transactional-emails', { transactional_email: transactionalPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_t = response) !== null && _t !== void 0 ? _t : {},
+                            json: (_x = response) !== null && _x !== void 0 ? _x : {},
                         });
                         continue;
                     }
@@ -1424,17 +1764,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/transactional-emails/${emailId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_u = response) !== null && _u !== void 0 ? _u : {},
+                            json: (_y = response) !== null && _y !== void 0 ? _y : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_v = pagination.page) !== null && _v !== void 0 ? _v : 1) || 1;
-                        const perPage = Number((_w = pagination.perPage) !== null && _w !== void 0 ? _w : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_z = pagination.page) !== null && _z !== void 0 ? _z : 1) || 1;
+                        const perPage = Number((_0 = pagination.perPage) !== null && _0 !== void 0 ? _0 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/transactional-emails', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_x = response) !== null && _x !== void 0 ? _x : {},
+                            json: (_1 = response) !== null && _1 !== void 0 ? _1 : {},
                         });
                         continue;
                     }

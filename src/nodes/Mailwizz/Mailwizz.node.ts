@@ -282,6 +282,12 @@ export class Mailwizz implements INodeType {
 				},
 				options: [
 					{
+						name: 'Create',
+						value: 'create',
+						action: 'Create a list',
+						description: 'Create a new list in MailWizz',
+					},
+					{
 						name: 'Get',
 						value: 'get',
 						action: 'Get a list',
@@ -803,6 +809,270 @@ export class Mailwizz implements INodeType {
 						operation: ['get'],
 					},
 				},
+			},
+			{
+				displayName: 'List Name',
+				name: 'listName',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Default From Email',
+				name: 'listFromEmail',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Default From Name',
+				name: 'listFromName',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Default Reply-To',
+				name: 'listReplyTo',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Company Name',
+				name: 'listCompanyName',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Company Address 1',
+				name: 'listAddress1',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Company Address 2',
+				name: 'listAddress2',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Company Country',
+				name: 'listCountry',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Company State',
+				name: 'listState',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Company City',
+				name: 'listCity',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Company Zip',
+				name: 'listZip',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Company Phone',
+				name: 'listPhone',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'List Options',
+				name: 'listOptions',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Confirmation Email Subject',
+						name: 'subject',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'Confirmation Email From Name',
+						name: 'fromName',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'Confirmation Email From Email',
+						name: 'fromEmail',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'Confirmation Email Reply-To',
+						name: 'replyTo',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'Welcome Email Subject',
+						name: 'welcomeSubject',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'Send Welcome Email',
+						name: 'sendWelcome',
+						type: 'options',
+						options: [
+							{
+								name: 'No',
+								value: 'no',
+							},
+							{
+								name: 'Yes',
+								value: 'yes',
+							},
+						],
+						default: 'yes',
+					},
+					{
+						displayName: 'Send Confirmation Email',
+						name: 'sendConfirmation',
+						type: 'options',
+						options: [
+							{
+								name: 'No',
+								value: 'no',
+							},
+							{
+								name: 'Yes',
+								value: 'yes',
+							},
+						],
+						default: 'yes',
+					},
+				],
+			},
+			{
+				displayName: 'Notifications',
+				name: 'listNotifications',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Subscriber Notifications',
+						name: 'subscribe',
+						type: 'string',
+						default: '',
+						description: 'Email address to notify on new subscriber',
+					},
+					{
+						displayName: 'Unsubscriber Notifications',
+						name: 'unsubscribe',
+						type: 'string',
+						default: '',
+						description: 'Email address to notify on unsubscribe',
+					},
+					{
+						displayName: 'Daily Summary',
+						name: 'daily',
+						type: 'string',
+						default: '',
+						description: 'Email address to receive daily summary',
+					},
+				],
 			},
 			{
 				displayName: 'Template ID',
@@ -1393,6 +1663,90 @@ export class Mailwizz implements INodeType {
 				}
 
 				if (resource === 'list') {
+					if (operation === 'create') {
+						const name = ensureString(this.getNodeParameter('listName', itemIndex));
+						const fromEmail = ensureString(this.getNodeParameter('listFromEmail', itemIndex));
+						const fromName = ensureString(this.getNodeParameter('listFromName', itemIndex));
+						const replyTo = ensureString(this.getNodeParameter('listReplyTo', itemIndex));
+						const company = ensureString(this.getNodeParameter('listCompanyName', itemIndex));
+						const address1 = ensureString(this.getNodeParameter('listAddress1', itemIndex));
+						const address2 = asString(this.getNodeParameter('listAddress2', itemIndex, '')) ?? '';
+						const country = ensureString(this.getNodeParameter('listCountry', itemIndex));
+						const state = asString(this.getNodeParameter('listState', itemIndex, '')) ?? '';
+						const city = ensureString(this.getNodeParameter('listCity', itemIndex));
+						const zip = ensureString(this.getNodeParameter('listZip', itemIndex));
+						const phone = asString(this.getNodeParameter('listPhone', itemIndex, '')) ?? '';
+
+						const options = this.getNodeParameter('listOptions', itemIndex, {}) as IDataObject;
+						const notifications = this.getNodeParameter('listNotifications', itemIndex, {}) as IDataObject;
+
+						const listPayload: IDataObject = {
+							general: {
+								name,
+								description: name,
+							},
+							defaults: {
+								from_name: fromName,
+								from_email: fromEmail,
+								reply_to: replyTo,
+							},
+							company: {
+								name: company,
+								address_1: address1,
+								address_2: address2,
+								country,
+								zone: state,
+								city,
+								zip,
+								phone,
+							},
+						};
+
+						const optionPayload: IDataObject = {};
+						if (options.subject) optionPayload.email_subscribe_subject = ensureString(options.subject);
+						if (options.fromName)
+							optionPayload.email_subscribe_from_name = ensureString(options.fromName);
+						if (options.fromEmail)
+							optionPayload.email_subscribe_from_email = ensureString(options.fromEmail);
+						if (options.replyTo) optionPayload.email_subscribe_reply_to = ensureString(options.replyTo);
+						if (options.welcomeSubject)
+							optionPayload.email_welcome_subject = ensureString(options.welcomeSubject);
+						if (options.sendWelcome)
+							optionPayload.send_welcome_email = ensureString(options.sendWelcome, 'yes');
+						if (options.sendConfirmation)
+							optionPayload.send_subscribe_confirmation = ensureString(options.sendConfirmation, 'yes');
+
+						if (Object.keys(optionPayload).length > 0) {
+							listPayload.options = optionPayload;
+						}
+
+						const notificationPayload: IDataObject = {};
+						if (notifications.subscribe)
+							notificationPayload.subscribe = ensureString(notifications.subscribe);
+						if (notifications.unsubscribe)
+							notificationPayload.unsubscribe = ensureString(notifications.unsubscribe);
+						if (notifications.daily) notificationPayload.daily = ensureString(notifications.daily);
+
+						if (Object.keys(notificationPayload).length > 0) {
+							listPayload.notifications = notificationPayload;
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'POST',
+							'/lists',
+							{ list: listPayload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
 					if (operation === 'get') {
 						const listId = ensureString(this.getNodeParameter('listId', itemIndex));
 						if (!listId) {

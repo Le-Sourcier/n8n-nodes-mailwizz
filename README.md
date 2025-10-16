@@ -11,11 +11,12 @@ This package provides a modern integration between n8n and self-hosted MailWizz 
 
 ### Key Features
 
-- **Create Campaigns** - Automatically create campaigns in MailWizz using v2 endpoints
+- **Campaign Automation** - Create new campaigns or fetch existing campaigns using the MailWizz v2 API
 - **Category Mapping** - Map WordPress categories to MailWizz lists and segments
-- **Template Integration** - Use existing MailWizz templates for your campaigns, with optional content injection
-- **Dynamic Subject Lines** - Use WordPress post titles as campaign subjects
-- **List and Template Management** - Retrieve lists, segments, and templates directly from MailWizz
+- **Template Management** - Create new templates or fetch existing ones with optional content injection
+- **List Management** - Create lists with company defaults, options, and notifications directly from n8n
+- **Bulk Subscriber Imports** - Push batches of subscribers into any list with a JSON payload
+- **Transactional Emails** - Send, list, or inspect transactional emails from your workflows
 
 ### Installation
 
@@ -23,7 +24,7 @@ This package provides a modern integration between n8n and self-hosted MailWizz 
 
 ```bash
 # Edit the file /app/data/env.sh
-export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.3"
+export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.4"
 export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 
 # Restart the n8n application from Cloudron dashboard
@@ -32,7 +33,7 @@ export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 #### In Standard n8n Environment
 
 ```bash
-npm install n8n-nodes-mailwizz-ls@2.0.3
+npm install n8n-nodes-mailwizz-ls@2.0.4
 ```
 
 ### Documentation
