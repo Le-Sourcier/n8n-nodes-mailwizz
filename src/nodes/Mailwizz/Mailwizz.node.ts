@@ -231,6 +231,14 @@ export class Mailwizz implements INodeType {
 						name: 'Template',
 						value: 'template',
 					},
+					{
+						name: 'Subscriber',
+						value: 'subscriber',
+					},
+					{
+						name: 'Transactional Email',
+						value: 'transactionalEmail',
+					},
 				],
 				required: true,
 				default: 'campaign',
@@ -252,6 +260,12 @@ export class Mailwizz implements INodeType {
 						value: 'create',
 						action: 'Create a campaign',
 						description: 'Create a new campaign in MailWizz',
+					},
+					{
+						name: 'Get',
+						value: 'get',
+						action: 'Get a campaign',
+						description: 'Retrieve a MailWizz campaign',
 					},
 				],
 				default: 'create',
@@ -294,6 +308,12 @@ export class Mailwizz implements INodeType {
 				},
 				options: [
 					{
+						name: 'Create',
+						value: 'create',
+						action: 'Create a template',
+						description: 'Create a new template in MailWizz',
+					},
+					{
 						name: 'Get',
 						value: 'get',
 						action: 'Get a template',
@@ -307,6 +327,58 @@ export class Mailwizz implements INodeType {
 					},
 				],
 				default: 'getAll',
+				noDataExpression: true,
+			},
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['subscriber'],
+					},
+				},
+				options: [
+					{
+						name: 'Create Bulk',
+						value: 'createBulk',
+						action: 'Create subscribers in bulk',
+						description: 'Create multiple subscribers inside a list',
+					},
+				],
+				default: 'createBulk',
+				noDataExpression: true,
+			},
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['transactionalEmail'],
+					},
+				},
+				options: [
+					{
+						name: 'Create',
+						value: 'create',
+						action: 'Send a transactional email',
+						description: 'Create and send a transactional email via MailWizz',
+					},
+					{
+						name: 'Get',
+						value: 'get',
+						action: 'Get a transactional email',
+						description: 'Retrieve a transactional email by its identifier',
+					},
+					{
+						name: 'Get Many',
+						value: 'getAll',
+						action: 'Get transactional emails',
+						description: 'Retrieve multiple transactional emails',
+					},
+				],
+				default: 'create',
 				noDataExpression: true,
 			},
 			{
@@ -383,6 +455,20 @@ export class Mailwizz implements INodeType {
 						operation: ['create'],
 					},
 				},
+			},
+			{
+				displayName: 'Campaign ID',
+				name: 'campaignId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['campaign'],
+						operation: ['get'],
+					},
+				},
+				description: 'Unique identifier of the campaign in MailWizz',
 			},
 			{
 				displayName: 'Send At',
@@ -682,6 +768,37 @@ export class Mailwizz implements INodeType {
 				default: '',
 				displayOptions: {
 					show: {
+						resource: ['subscriber'],
+						operation: ['createBulk'],
+					},
+				},
+				description: 'Identifier of the list that the subscribers will be added to',
+			},
+			{
+				displayName: 'Subscribers',
+				name: 'subscribers',
+				type: 'json',
+				typeOptions: {
+					alwaysOpenEditWindow: true,
+				},
+				default: '={{$json["subscribers"]}}',
+				displayOptions: {
+					show: {
+						resource: ['subscriber'],
+						operation: ['createBulk'],
+					},
+				},
+				required: true,
+				description: 'JSON array of subscriber objects to create in MailWizz',
+			},
+			{
+				displayName: 'List ID',
+				name: 'listId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
 						resource: ['list'],
 						operation: ['get'],
 					},
@@ -701,13 +818,230 @@ export class Mailwizz implements INodeType {
 				},
 			},
 			{
+				displayName: 'Template Name',
+				name: 'templateName',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['template'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Template Content',
+				name: 'templateContent',
+				type: 'string',
+				required: true,
+				typeOptions: {
+					rows: 10,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['template'],
+						operation: ['create'],
+					},
+				},
+				description: 'HTML content for the template',
+			},
+			{
+				displayName: 'Additional Fields',
+				name: 'templateAdditionalFields',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['template'],
+						operation: ['create'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Plain Text',
+						name: 'plainText',
+						type: 'string',
+						typeOptions: {
+							rows: 6,
+						},
+						default: '',
+					},
+					{
+						displayName: 'Inline CSS',
+						name: 'inlineCss',
+						type: 'options',
+						options: [
+							{
+								name: 'No',
+								value: 'no',
+							},
+							{
+								name: 'Yes',
+								value: 'yes',
+							},
+						],
+						default: 'no',
+					},
+					{
+						displayName: 'Auto Plain Text',
+						name: 'autoPlainText',
+						type: 'options',
+						options: [
+							{
+								name: 'No',
+								value: 'no',
+							},
+							{
+								name: 'Yes',
+								value: 'yes',
+							},
+						],
+						default: 'yes',
+					},
+				],
+			},
+			{
+				displayName: 'Transactional Email ID',
+				name: 'transactionalEmailId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['transactionalEmail'],
+						operation: ['get'],
+					},
+				},
+				description: 'Identifier of the transactional email in MailWizz',
+			},
+			{
+				displayName: 'From Name',
+				name: 'fromName',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['transactionalEmail'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'From Email',
+				name: 'fromEmail',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['transactionalEmail'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'To Email',
+				name: 'toEmail',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['transactionalEmail'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'Subject',
+				name: 'transactionalSubject',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['transactionalEmail'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
+				displayName: 'HTML Body',
+				name: 'transactionalBody',
+				type: 'string',
+				required: true,
+				typeOptions: {
+					rows: 10,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['transactionalEmail'],
+						operation: ['create'],
+					},
+				},
+				description: 'HTML content of the transactional email',
+			},
+			{
+				displayName: 'Additional Fields',
+				name: 'additionalFields',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['transactionalEmail'],
+						operation: ['create'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Plain Text Body',
+						name: 'plainText',
+						type: 'string',
+						typeOptions: {
+							rows: 6,
+						},
+						default: '',
+					},
+					{
+						displayName: 'Reply To',
+						name: 'replyTo',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'To Name',
+						name: 'toName',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'Send At',
+						name: 'sendAt',
+						type: 'dateTime',
+						default: '',
+						description: 'Schedule the transactional email for a later time',
+					},
+					{
+						displayName: 'Action',
+						name: 'action',
+						type: 'string',
+						default: '',
+						description: 'Advanced override for the MailWizz action parameter, e.g. send-now',
+					},
+				],
+			},
+			{
 				displayName: 'Pagination',
 				name: 'pagination',
 				type: 'collection',
 				default: {},
 				displayOptions: {
 					show: {
-						resource: ['list', 'template'],
+						resource: ['list', 'template', 'transactionalEmail'],
 						operation: ['getAll'],
 					},
 				},
@@ -1036,6 +1370,28 @@ export class Mailwizz implements INodeType {
 					continue;
 				}
 
+				if (resource === 'campaign' && operation === 'get') {
+					const campaignId = ensureString(this.getNodeParameter('campaignId', itemIndex));
+					if (!campaignId) {
+						throw new NodeOperationError(this.getNode(), 'Campaign ID is required.', { itemIndex });
+					}
+
+					const response = await mailwizzApiRequest.call(
+						this,
+						'GET',
+						`/campaigns/${campaignId}`,
+						{},
+						{},
+						{},
+						itemIndex,
+					);
+
+					returnData.push({
+						json: (response as IDataObject) ?? {},
+					});
+					continue;
+				}
+
 				if (resource === 'list') {
 					if (operation === 'get') {
 						const listId = ensureString(this.getNodeParameter('listId', itemIndex));
@@ -1082,7 +1438,131 @@ export class Mailwizz implements INodeType {
 					}
 				}
 
+				if (resource === 'subscriber') {
+					if (operation === 'createBulk') {
+						const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+						if (!listId) {
+							throw new NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+						}
+
+						const rawSubscribers = this.getNodeParameter('subscribers', itemIndex);
+
+						const resolveSubscribers = (value: unknown): IDataObject[] => {
+							if (typeof value === 'string') {
+								const trimmed = value.trim();
+								if (trimmed === '') {
+									return [];
+								}
+								try {
+									return resolveSubscribers(JSON.parse(trimmed));
+								} catch (error) {
+									throw new NodeOperationError(
+										this.getNode(),
+										'Subscribers parameter must be valid JSON.',
+										{ itemIndex },
+									);
+								}
+							}
+
+							if (Array.isArray(value)) {
+								return toRecordArray(value);
+							}
+
+							if (isRecord(value)) {
+								const record = value as IDataObject;
+								if (Array.isArray(record.subscribers)) {
+									return toRecordArray(record.subscribers as IDataObject[]);
+								}
+								return [record];
+							}
+
+							return [];
+						};
+
+						const subscribersPayload = resolveSubscribers(rawSubscribers);
+
+						if (subscribersPayload.length === 0) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Provide at least one subscriber in the subscribers parameter.',
+								{ itemIndex },
+							);
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'POST',
+							`/lists/${listId}/subscribers/bulk`,
+							{ subscribers: subscribersPayload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+				}
+
 				if (resource === 'template') {
+					if (operation === 'create') {
+						const templateName = ensureString(this.getNodeParameter('templateName', itemIndex));
+						const templateContent = ensureString(this.getNodeParameter('templateContent', itemIndex));
+
+						if (!templateName || !templateContent) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Template name and content are required.',
+								{ itemIndex },
+							);
+						}
+
+						const additionalFields = this.getNodeParameter(
+							'templateAdditionalFields',
+							itemIndex,
+							{},
+						) as IDataObject;
+
+						const templatePayload: IDataObject = {
+							name: templateName,
+							content: templateContent,
+						};
+
+						const plainText = asString(additionalFields.plainText);
+						if (plainText) {
+							templatePayload.plain_text = plainText;
+						}
+
+						const inlineCss = asString(additionalFields.inlineCss);
+						if (inlineCss) {
+							templatePayload.inline_css = inlineCss;
+						}
+
+						const autoPlainText = asString(additionalFields.autoPlainText);
+						if (autoPlainText) {
+							templatePayload.auto_plain_text = autoPlainText;
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'POST',
+							'/templates',
+							{
+								template: templatePayload,
+							},
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
 					if (operation === 'get') {
 						const templateId = ensureString(this.getNodeParameter('templateId', itemIndex));
 						if (!templateId) {
@@ -1115,6 +1595,120 @@ export class Mailwizz implements INodeType {
 							this,
 							'GET',
 							'/templates',
+							{},
+							{ page, per_page: perPage },
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+				}
+
+				if (resource === 'transactionalEmail') {
+					if (operation === 'create') {
+						const fromName = ensureString(this.getNodeParameter('fromName', itemIndex));
+						const fromEmail = ensureString(this.getNodeParameter('fromEmail', itemIndex));
+						const toEmail = ensureString(this.getNodeParameter('toEmail', itemIndex));
+						const subject = ensureString(this.getNodeParameter('transactionalSubject', itemIndex));
+						const body = ensureString(this.getNodeParameter('transactionalBody', itemIndex));
+
+						if (!fromName || !fromEmail || !toEmail || !subject || !body) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'From name, from email, to email, subject, and HTML body are required.',
+								{ itemIndex },
+							);
+						}
+
+						const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
+
+						const transactionalPayload: IDataObject = {
+							from_name: fromName,
+							from_email: fromEmail,
+							to_email: toEmail,
+							subject,
+							body,
+						};
+
+						const toName = asString(additionalFields.toName);
+						if (toName) {
+							transactionalPayload.to_name = toName;
+						}
+
+						const replyTo = asString(additionalFields.replyTo);
+						if (replyTo) {
+							transactionalPayload.reply_to = replyTo;
+						}
+
+						const plainText = asString(additionalFields.plainText);
+						if (plainText) {
+							transactionalPayload.plain_text = plainText;
+						}
+
+						const sendAt = asString(additionalFields.sendAt);
+						if (sendAt) {
+							transactionalPayload.send_at = normaliseDate(sendAt);
+						}
+
+						const action = asString(additionalFields.action);
+						if (action) {
+							transactionalPayload.action = action;
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'POST',
+							'/transactional-emails',
+							{ transactional_email: transactionalPayload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'get') {
+						const emailId = ensureString(this.getNodeParameter('transactionalEmailId', itemIndex));
+						if (!emailId) {
+							throw new NodeOperationError(this.getNode(), 'Transactional email ID is required.', {
+								itemIndex,
+							});
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'GET',
+							`/transactional-emails/${emailId}`,
+							{},
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'getAll') {
+						const pagination = this.getNodeParameter('pagination', itemIndex, {}) as IDataObject;
+						const page = Number(pagination.page ?? 1) || 1;
+						const perPage =
+							Number(pagination.perPage ?? DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'GET',
+							'/transactional-emails',
 							{},
 							{ page, per_page: perPage },
 							{},

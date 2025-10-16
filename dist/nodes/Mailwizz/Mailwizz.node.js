@@ -172,6 +172,14 @@ class Mailwizz {
                             name: 'Template',
                             value: 'template',
                         },
+                        {
+                            name: 'Subscriber',
+                            value: 'subscriber',
+                        },
+                        {
+                            name: 'Transactional Email',
+                            value: 'transactionalEmail',
+                        },
                     ],
                     required: true,
                     default: 'campaign',
@@ -193,6 +201,12 @@ class Mailwizz {
                             value: 'create',
                             action: 'Create a campaign',
                             description: 'Create a new campaign in MailWizz',
+                        },
+                        {
+                            name: 'Get',
+                            value: 'get',
+                            action: 'Get a campaign',
+                            description: 'Retrieve a MailWizz campaign',
                         },
                     ],
                     default: 'create',
@@ -235,6 +249,12 @@ class Mailwizz {
                     },
                     options: [
                         {
+                            name: 'Create',
+                            value: 'create',
+                            action: 'Create a template',
+                            description: 'Create a new template in MailWizz',
+                        },
+                        {
                             name: 'Get',
                             value: 'get',
                             action: 'Get a template',
@@ -248,6 +268,58 @@ class Mailwizz {
                         },
                     ],
                     default: 'getAll',
+                    noDataExpression: true,
+                },
+                {
+                    displayName: 'Operation',
+                    name: 'operation',
+                    type: 'options',
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                        },
+                    },
+                    options: [
+                        {
+                            name: 'Create Bulk',
+                            value: 'createBulk',
+                            action: 'Create subscribers in bulk',
+                            description: 'Create multiple subscribers inside a list',
+                        },
+                    ],
+                    default: 'createBulk',
+                    noDataExpression: true,
+                },
+                {
+                    displayName: 'Operation',
+                    name: 'operation',
+                    type: 'options',
+                    displayOptions: {
+                        show: {
+                            resource: ['transactionalEmail'],
+                        },
+                    },
+                    options: [
+                        {
+                            name: 'Create',
+                            value: 'create',
+                            action: 'Send a transactional email',
+                            description: 'Create and send a transactional email via MailWizz',
+                        },
+                        {
+                            name: 'Get',
+                            value: 'get',
+                            action: 'Get a transactional email',
+                            description: 'Retrieve a transactional email by its identifier',
+                        },
+                        {
+                            name: 'Get Many',
+                            value: 'getAll',
+                            action: 'Get transactional emails',
+                            description: 'Retrieve multiple transactional emails',
+                        },
+                    ],
+                    default: 'create',
                     noDataExpression: true,
                 },
                 {
@@ -324,6 +396,20 @@ class Mailwizz {
                             operation: ['create'],
                         },
                     },
+                },
+                {
+                    displayName: 'Campaign ID',
+                    name: 'campaignId',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['campaign'],
+                            operation: ['get'],
+                        },
+                    },
+                    description: 'Unique identifier of the campaign in MailWizz',
                 },
                 {
                     displayName: 'Send At',
@@ -623,6 +709,37 @@ class Mailwizz {
                     default: '',
                     displayOptions: {
                         show: {
+                            resource: ['subscriber'],
+                            operation: ['createBulk'],
+                        },
+                    },
+                    description: 'Identifier of the list that the subscribers will be added to',
+                },
+                {
+                    displayName: 'Subscribers',
+                    name: 'subscribers',
+                    type: 'json',
+                    typeOptions: {
+                        alwaysOpenEditWindow: true,
+                    },
+                    default: '={{$json["subscribers"]}}',
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['createBulk'],
+                        },
+                    },
+                    required: true,
+                    description: 'JSON array of subscriber objects to create in MailWizz',
+                },
+                {
+                    displayName: 'List ID',
+                    name: 'listId',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
                             resource: ['list'],
                             operation: ['get'],
                         },
@@ -642,13 +759,230 @@ class Mailwizz {
                     },
                 },
                 {
+                    displayName: 'Template Name',
+                    name: 'templateName',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['template'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Template Content',
+                    name: 'templateContent',
+                    type: 'string',
+                    required: true,
+                    typeOptions: {
+                        rows: 10,
+                    },
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['template'],
+                            operation: ['create'],
+                        },
+                    },
+                    description: 'HTML content for the template',
+                },
+                {
+                    displayName: 'Additional Fields',
+                    name: 'templateAdditionalFields',
+                    type: 'collection',
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['template'],
+                            operation: ['create'],
+                        },
+                    },
+                    options: [
+                        {
+                            displayName: 'Plain Text',
+                            name: 'plainText',
+                            type: 'string',
+                            typeOptions: {
+                                rows: 6,
+                            },
+                            default: '',
+                        },
+                        {
+                            displayName: 'Inline CSS',
+                            name: 'inlineCss',
+                            type: 'options',
+                            options: [
+                                {
+                                    name: 'No',
+                                    value: 'no',
+                                },
+                                {
+                                    name: 'Yes',
+                                    value: 'yes',
+                                },
+                            ],
+                            default: 'no',
+                        },
+                        {
+                            displayName: 'Auto Plain Text',
+                            name: 'autoPlainText',
+                            type: 'options',
+                            options: [
+                                {
+                                    name: 'No',
+                                    value: 'no',
+                                },
+                                {
+                                    name: 'Yes',
+                                    value: 'yes',
+                                },
+                            ],
+                            default: 'yes',
+                        },
+                    ],
+                },
+                {
+                    displayName: 'Transactional Email ID',
+                    name: 'transactionalEmailId',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['transactionalEmail'],
+                            operation: ['get'],
+                        },
+                    },
+                    description: 'Identifier of the transactional email in MailWizz',
+                },
+                {
+                    displayName: 'From Name',
+                    name: 'fromName',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['transactionalEmail'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'From Email',
+                    name: 'fromEmail',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['transactionalEmail'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'To Email',
+                    name: 'toEmail',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['transactionalEmail'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Subject',
+                    name: 'transactionalSubject',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['transactionalEmail'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'HTML Body',
+                    name: 'transactionalBody',
+                    type: 'string',
+                    required: true,
+                    typeOptions: {
+                        rows: 10,
+                    },
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['transactionalEmail'],
+                            operation: ['create'],
+                        },
+                    },
+                    description: 'HTML content of the transactional email',
+                },
+                {
+                    displayName: 'Additional Fields',
+                    name: 'additionalFields',
+                    type: 'collection',
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['transactionalEmail'],
+                            operation: ['create'],
+                        },
+                    },
+                    options: [
+                        {
+                            displayName: 'Plain Text Body',
+                            name: 'plainText',
+                            type: 'string',
+                            typeOptions: {
+                                rows: 6,
+                            },
+                            default: '',
+                        },
+                        {
+                            displayName: 'Reply To',
+                            name: 'replyTo',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'To Name',
+                            name: 'toName',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'Send At',
+                            name: 'sendAt',
+                            type: 'dateTime',
+                            default: '',
+                            description: 'Schedule the transactional email for a later time',
+                        },
+                        {
+                            displayName: 'Action',
+                            name: 'action',
+                            type: 'string',
+                            default: '',
+                            description: 'Advanced override for the MailWizz action parameter, e.g. send-now',
+                        },
+                    ],
+                },
+                {
                     displayName: 'Pagination',
                     name: 'pagination',
                     type: 'collection',
                     default: {},
                     displayOptions: {
                         show: {
-                            resource: ['list', 'template'],
+                            resource: ['list', 'template', 'transactionalEmail'],
                             operation: ['getAll'],
                         },
                     },
@@ -782,7 +1116,7 @@ class Mailwizz {
         };
     }
     async execute() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
         const items = this.getInputData();
         const returnData = [];
         for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
@@ -906,6 +1240,17 @@ class Mailwizz {
                     });
                     continue;
                 }
+                if (resource === 'campaign' && operation === 'get') {
+                    const campaignId = ensureString(this.getNodeParameter('campaignId', itemIndex));
+                    if (!campaignId) {
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Campaign ID is required.', { itemIndex });
+                    }
+                    const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/campaigns/${campaignId}`, {}, {}, {}, itemIndex);
+                    returnData.push({
+                        json: (_g = response) !== null && _g !== void 0 ? _g : {},
+                    });
+                    continue;
+                }
                 if (resource === 'list') {
                     if (operation === 'get') {
                         const listId = ensureString(this.getNodeParameter('listId', itemIndex));
@@ -914,22 +1259,96 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_g = response) !== null && _g !== void 0 ? _g : {},
+                            json: (_h = response) !== null && _h !== void 0 ? _h : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_h = pagination.page) !== null && _h !== void 0 ? _h : 1) || 1;
-                        const perPage = Number((_j = pagination.perPage) !== null && _j !== void 0 ? _j : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_j = pagination.page) !== null && _j !== void 0 ? _j : 1) || 1;
+                        const perPage = Number((_k = pagination.perPage) !== null && _k !== void 0 ? _k : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/lists', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_k = response) !== null && _k !== void 0 ? _k : {},
+                            json: (_l = response) !== null && _l !== void 0 ? _l : {},
+                        });
+                        continue;
+                    }
+                }
+                if (resource === 'subscriber') {
+                    if (operation === 'createBulk') {
+                        const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+                        if (!listId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+                        }
+                        const rawSubscribers = this.getNodeParameter('subscribers', itemIndex);
+                        const resolveSubscribers = (value) => {
+                            if (typeof value === 'string') {
+                                const trimmed = value.trim();
+                                if (trimmed === '') {
+                                    return [];
+                                }
+                                try {
+                                    return resolveSubscribers(JSON.parse(trimmed));
+                                }
+                                catch (error) {
+                                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscribers parameter must be valid JSON.', { itemIndex });
+                                }
+                            }
+                            if (Array.isArray(value)) {
+                                return toRecordArray(value);
+                            }
+                            if (isRecord(value)) {
+                                const record = value;
+                                if (Array.isArray(record.subscribers)) {
+                                    return toRecordArray(record.subscribers);
+                                }
+                                return [record];
+                            }
+                            return [];
+                        };
+                        const subscribersPayload = resolveSubscribers(rawSubscribers);
+                        if (subscribersPayload.length === 0) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide at least one subscriber in the subscribers parameter.', { itemIndex });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers/bulk`, { subscribers: subscribersPayload }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_m = response) !== null && _m !== void 0 ? _m : {},
                         });
                         continue;
                     }
                 }
                 if (resource === 'template') {
+                    if (operation === 'create') {
+                        const templateName = ensureString(this.getNodeParameter('templateName', itemIndex));
+                        const templateContent = ensureString(this.getNodeParameter('templateContent', itemIndex));
+                        if (!templateName || !templateContent) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Template name and content are required.', { itemIndex });
+                        }
+                        const additionalFields = this.getNodeParameter('templateAdditionalFields', itemIndex, {});
+                        const templatePayload = {
+                            name: templateName,
+                            content: templateContent,
+                        };
+                        const plainText = asString(additionalFields.plainText);
+                        if (plainText) {
+                            templatePayload.plain_text = plainText;
+                        }
+                        const inlineCss = asString(additionalFields.inlineCss);
+                        if (inlineCss) {
+                            templatePayload.inline_css = inlineCss;
+                        }
+                        const autoPlainText = asString(additionalFields.autoPlainText);
+                        if (autoPlainText) {
+                            templatePayload.auto_plain_text = autoPlainText;
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/templates', {
+                            template: templatePayload,
+                        }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_o = response) !== null && _o !== void 0 ? _o : {},
+                        });
+                        continue;
+                    }
                     if (operation === 'get') {
                         const templateId = ensureString(this.getNodeParameter('templateId', itemIndex));
                         if (!templateId) {
@@ -937,17 +1356,85 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_l = response) !== null && _l !== void 0 ? _l : {},
+                            json: (_p = response) !== null && _p !== void 0 ? _p : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_m = pagination.page) !== null && _m !== void 0 ? _m : 1) || 1;
-                        const perPage = Number((_o = pagination.perPage) !== null && _o !== void 0 ? _o : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_q = pagination.page) !== null && _q !== void 0 ? _q : 1) || 1;
+                        const perPage = Number((_r = pagination.perPage) !== null && _r !== void 0 ? _r : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/templates', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_p = response) !== null && _p !== void 0 ? _p : {},
+                            json: (_s = response) !== null && _s !== void 0 ? _s : {},
+                        });
+                        continue;
+                    }
+                }
+                if (resource === 'transactionalEmail') {
+                    if (operation === 'create') {
+                        const fromName = ensureString(this.getNodeParameter('fromName', itemIndex));
+                        const fromEmail = ensureString(this.getNodeParameter('fromEmail', itemIndex));
+                        const toEmail = ensureString(this.getNodeParameter('toEmail', itemIndex));
+                        const subject = ensureString(this.getNodeParameter('transactionalSubject', itemIndex));
+                        const body = ensureString(this.getNodeParameter('transactionalBody', itemIndex));
+                        if (!fromName || !fromEmail || !toEmail || !subject || !body) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'From name, from email, to email, subject, and HTML body are required.', { itemIndex });
+                        }
+                        const additionalFields = this.getNodeParameter('additionalFields', itemIndex, {});
+                        const transactionalPayload = {
+                            from_name: fromName,
+                            from_email: fromEmail,
+                            to_email: toEmail,
+                            subject,
+                            body,
+                        };
+                        const toName = asString(additionalFields.toName);
+                        if (toName) {
+                            transactionalPayload.to_name = toName;
+                        }
+                        const replyTo = asString(additionalFields.replyTo);
+                        if (replyTo) {
+                            transactionalPayload.reply_to = replyTo;
+                        }
+                        const plainText = asString(additionalFields.plainText);
+                        if (plainText) {
+                            transactionalPayload.plain_text = plainText;
+                        }
+                        const sendAt = asString(additionalFields.sendAt);
+                        if (sendAt) {
+                            transactionalPayload.send_at = normaliseDate(sendAt);
+                        }
+                        const action = asString(additionalFields.action);
+                        if (action) {
+                            transactionalPayload.action = action;
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/transactional-emails', { transactional_email: transactionalPayload }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_t = response) !== null && _t !== void 0 ? _t : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'get') {
+                        const emailId = ensureString(this.getNodeParameter('transactionalEmailId', itemIndex));
+                        if (!emailId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Transactional email ID is required.', {
+                                itemIndex,
+                            });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/transactional-emails/${emailId}`, {}, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_u = response) !== null && _u !== void 0 ? _u : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'getAll') {
+                        const pagination = this.getNodeParameter('pagination', itemIndex, {});
+                        const page = Number((_v = pagination.page) !== null && _v !== void 0 ? _v : 1) || 1;
+                        const perPage = Number((_w = pagination.perPage) !== null && _w !== void 0 ? _w : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/transactional-emails', {}, { page, per_page: perPage }, {}, itemIndex);
+                        returnData.push({
+                            json: (_x = response) !== null && _x !== void 0 ? _x : {},
                         });
                         continue;
                     }
