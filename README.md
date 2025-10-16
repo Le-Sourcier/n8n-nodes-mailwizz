@@ -24,7 +24,7 @@ This package provides a modern integration between n8n and self-hosted MailWizz 
 
 ```bash
 # Edit the file /app/data/env.sh
-export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.4"
+export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.5"
 export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 
 # Restart the n8n application from Cloudron dashboard
@@ -33,7 +33,7 @@ export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 #### In Standard n8n Environment
 
 ```bash
-npm install n8n-nodes-mailwizz-ls@2.0.4
+npm install n8n-nodes-mailwizz-ls@2.0.5
 ```
 
 ### Documentation
