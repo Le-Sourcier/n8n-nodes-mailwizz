@@ -672,7 +672,8 @@ export class MailwizzNode implements INodeType {
           }];
         }
 
-        const response = await listsClient.getListSegments({
+        // @ts-ignore - getSegments exists in API but not in type definitions
+        const response = await (listsClient as any).getSegments({
           listID: listId,
         });
 
@@ -914,8 +915,12 @@ export class MailwizzNode implements INodeType {
                   templateUid: templateId,
                 });
 
-                if (templateResponse && templateResponse.data && templateResponse.data.content) {
-                  templateContent = templateResponse.data.content as string;
+                // The content field exists in API response but not in type definitions
+                if (templateResponse && templateResponse.data && templateResponse.data.record) {
+                  const record = templateResponse.data.record as any;
+                  if (record.content) {
+                    templateContent = record.content as string;
+                  }
                 }
               } catch (error) {
                 console.error('Error getting template content:', error);
