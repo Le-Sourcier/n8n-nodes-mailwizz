@@ -1,0 +1,52 @@
+{
+  "name": "n8n-nodes-mailwizz-ls",
+  "version": "2.0.1",
+  "description": "n8n community node for MailWizz that targets the latest self-hosted release and API v2",
+  "homepage": "https://github.com/le-sourcier/n8n-nodes-mailwizz-ls#readme",
+  "keywords": [
+    "n8n",
+    "n8n-node",
+    "n8n-community-node",
+    "mailwizz",
+    "email",
+    "newsletter"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Le-Sourcier",
+    "email": "hackersranch@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/le-sourcier/n8n-nodes-mailwizz-ls.git"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "node scripts/clean-dist.js && tsc && node scripts/copy-assets.js",
+    "dev": "tsc --watch",
+    "lint": "eslint src",
+    "prepare": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "credentials": [
+      "dist/credentials/MailwizzApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Mailwizz/Mailwizz.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.5.2",
+    "n8n-workflow": "^1.0.0",
+    "typescript": "^5.5.4"
+  },
+  "peerDependencies": {
+    "n8n-core": ">=1.80.0",
+    "n8n-workflow": ">=1.80.0"
+  }
+}
