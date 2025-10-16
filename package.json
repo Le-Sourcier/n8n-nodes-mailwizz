@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-mailwizz",
+  "name": "@le-sourcier/n8n-nodes-mailwizz",
   "version": "1.0.1",
   "description": "n8n node dla integracji z Mailwizz",
   "homepage": "https://github.com/sqlik/n8n-nodes-mailwizz#readme",
