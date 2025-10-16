@@ -606,10 +606,12 @@ class MailwizzNode {
         // Metoda do pobierania list
         if (methodName === 'getLists') {
             try {
+                console.log('[Mailwizz Node] Loading lists for dropdown...');
                 const response = await listsClient.getLists({
                     page: 1,
                     per_page: 100,
                 });
+                console.log(`[Mailwizz Node] Lists response:`, JSON.stringify(response, null, 2));
                 if (response && response.data && response.data.records) {
                     for (const list of response.data.records) {
                         returnData.push({
@@ -653,10 +655,12 @@ class MailwizzNode {
                             value: '',
                         }];
                 }
+                console.log(`[Mailwizz Node] Loading segments for listId: ${listId}`);
                 // @ts-ignore - getSegments exists in API but not in type definitions
                 const response = await listsClient.getSegments({
                     listID: listId,
                 });
+                console.log(`[Mailwizz Node] Segments response:`, JSON.stringify(response, null, 2));
                 if (response && response.data && response.data.records) {
                     for (const segment of response.data.records) {
                         returnData.push({
@@ -684,10 +688,12 @@ class MailwizzNode {
         // Metoda do pobierania szablonów
         if (methodName === 'getTemplates') {
             try {
+                console.log('[Mailwizz Node] Loading templates for dropdown...');
                 const response = await templatesClient.getTemplates({
                     page: 1,
                     per_page: 100,
                 });
+                console.log(`[Mailwizz Node] Templates response:`, JSON.stringify(response, null, 2));
                 if (response && response.data && response.data.records) {
                     for (const template of response.data.records) {
                         returnData.push({
@@ -728,6 +734,7 @@ class MailwizzNode {
             try {
                 const resource = this.getNodeParameter('resource', i);
                 const operation = this.getNodeParameter('operation', i);
+                console.log(`[Mailwizz Node] Processing item ${i}: resource=${resource}, operation=${operation}`);
                 // Campaign operations
                 if (resource === 'campaign') {
                     if (operation === 'create') {
@@ -821,21 +828,43 @@ class MailwizzNode {
                             listId = this.getNodeParameter('listId', i);
                             segmentId = this.getNodeParameter('segmentId', i, '');
                         }
-                        // Format sendAt as YYYY-MM-DD HH:MM:SS
-                        const sendAtFormatted = new Date(sendAt).toISOString().slice(0, 19).replace('T', ' ');
-                        // Prepare campaign data
-                        const campaignData = {
+                        console.log(`[Mailwizz Node] Campaign parameters:`, {
                             name,
                             type,
                             fromName,
                             fromEmail,
                             subject,
                             replyTo,
-                            sendAt: sendAtFormatted,
+                            sendAt,
                             listId,
                             segmentId,
-                            urlTracking,
                             templateId,
+                            urlTracking,
+                            useCategoryMapping,
+                            passWordPressData
+                        });
+                        // Format sendAt as YYYY-MM-DD HH:MM:SS
+                        const sendAtFormatted = new Date(sendAt).toISOString().slice(0, 19).replace('T', ' ');
+                        // Prepare campaign data according to MailWizz API structure
+                        const campaignData = {
+                            name,
+                            type,
+                            from_name: fromName, // Use snake_case as per MailWizz API
+                            from_email: fromEmail,
+                            subject,
+                            reply_to: replyTo,
+                            send_at: sendAtFormatted,
+                            list_uid: listId, // Use list_uid instead of listId
+                        };
+                        // Add segment if provided
+                        if (segmentId) {
+                            campaignData.segment_uid = segmentId; // Use segment_uid instead of segmentId
+                        }
+                        // Add options block
+                        campaignData.options = {
+                            url_tracking: urlTracking,
+                            plain_text_email: 'yes',
+                            auto_plain_text: 'yes',
                         };
                         // Handle WordPress data for template
                         if (passWordPressData) {
@@ -844,19 +873,31 @@ class MailwizzNode {
                             let templateContent = '';
                             // Get the template content first
                             try {
+                                console.log(`[Mailwizz Node] Fetching template content for templateId: ${templateId}`);
                                 const templateResponse = await templatesClient.getTemplate({
                                     templateUid: templateId,
                                 });
+                                console.log(`[Mailwizz Node] Template response:`, JSON.stringify(templateResponse, null, 2));
                                 // The content field exists in API response but not in type definitions
                                 if (templateResponse && templateResponse.data && templateResponse.data.record) {
                                     const record = templateResponse.data.record;
                                     if (record.content) {
                                         templateContent = record.content;
+                                        console.log(`[Mailwizz Node] Template content retrieved, length: ${templateContent.length}`);
                                     }
+                                    else {
+                                        console.warn(`[Mailwizz Node] No content field in template record`);
+                                    }
+                                }
+                                else {
+                                    console.warn(`[Mailwizz Node] Invalid template response structure`);
                                 }
                             }
                             catch (error) {
-                                console.error('Error getting template content:', error);
+                                console.error('[Mailwizz Node] Error getting template content:', error);
+                                if (error instanceof Error) {
+                                    console.error('[Mailwizz Node] Error details:', error.message, error.stack);
+                                }
                             }
                             // If we have template content, replace placeholders with WordPress data
                             if (templateContent) {
@@ -890,12 +931,38 @@ class MailwizzNode {
                                 if (items[i].json[this.getNodeParameter('wpSubjectField', i)]) {
                                     templateContent = templateContent.replace(/\[POST_TITLE\]/g, items[i].json[this.getNodeParameter('wpSubjectField', i)]);
                                 }
-                                // Add the modified template content to the campaign data
-                                campaignData.content = templateContent;
+                                // Add the modified template content to the campaign data in template block
+                                campaignData.template = {
+                                    content: templateContent,
+                                    inline_css: 'no',
+                                    auto_plain_text: 'yes',
+                                };
+                                console.log(`[Mailwizz Node] Template content added to campaign data`);
+                            }
+                            else {
+                                // Use template_uid if no content replacement needed
+                                campaignData.template = {
+                                    template_uid: templateId,
+                                    inline_css: 'no',
+                                    auto_plain_text: 'yes',
+                                };
+                                console.log(`[Mailwizz Node] Using template_uid: ${templateId}`);
                             }
                         }
+                        else {
+                            // No WordPress data processing, use template_uid directly
+                            campaignData.template = {
+                                template_uid: templateId,
+                                inline_css: 'no',
+                                auto_plain_text: 'yes',
+                            };
+                            console.log(`[Mailwizz Node] Using template_uid without WP data: ${templateId}`);
+                        }
+                        console.log(`[Mailwizz Node] Final campaign data:`, JSON.stringify(campaignData, null, 2));
                         // Create campaign
+                        console.log(`[Mailwizz Node] Creating campaign...`);
                         const campaign = await campaignsClient.create(campaignData);
+                        console.log(`[Mailwizz Node] Campaign created successfully:`, JSON.stringify(campaign, null, 2));
                         returnData.push({
                             json: campaign,
                         });
@@ -907,19 +974,23 @@ class MailwizzNode {
                         const paginationParameters = this.getNodeParameter('pagination', i, {});
                         const page = paginationParameters.page || 1;
                         const perPage = paginationParameters.perPage || 10;
+                        console.log(`[Mailwizz Node] Getting lists: page=${page}, perPage=${perPage}`);
                         const lists = await listsClient.getLists({
                             page,
                             per_page: perPage,
                         });
+                        console.log(`[Mailwizz Node] Lists retrieved:`, JSON.stringify(lists, null, 2));
                         returnData.push({
                             json: lists,
                         });
                     }
                     else if (operation === 'get') {
                         const listId = this.getNodeParameter('listId', i);
+                        console.log(`[Mailwizz Node] Getting list: listId=${listId}`);
                         const list = await listsClient.getList({
                             listID: listId,
                         });
+                        console.log(`[Mailwizz Node] List retrieved:`, JSON.stringify(list, null, 2));
                         returnData.push({
                             json: list,
                         });
@@ -931,19 +1002,23 @@ class MailwizzNode {
                         const paginationParameters = this.getNodeParameter('pagination', i, {});
                         const page = paginationParameters.page || 1;
                         const perPage = paginationParameters.perPage || 10;
+                        console.log(`[Mailwizz Node] Getting templates: page=${page}, perPage=${perPage}`);
                         const templates = await templatesClient.getTemplates({
                             page,
                             per_page: perPage,
                         });
+                        console.log(`[Mailwizz Node] Templates retrieved:`, JSON.stringify(templates, null, 2));
                         returnData.push({
                             json: templates,
                         });
                     }
                     else if (operation === 'get') {
                         const templateId = this.getNodeParameter('templateId', i);
+                        console.log(`[Mailwizz Node] Getting template: templateId=${templateId}`);
                         const template = await templatesClient.getTemplate({
                             templateUid: templateId,
                         });
+                        console.log(`[Mailwizz Node] Template retrieved:`, JSON.stringify(template, null, 2));
                         returnData.push({
                             json: template,
                         });
@@ -951,14 +1026,26 @@ class MailwizzNode {
                 }
             }
             catch (error) {
+                console.error(`[Mailwizz Node] Error processing item ${i}:`, error);
+                if (error instanceof Error) {
+                    console.error(`[Mailwizz Node] Error message: ${error.message}`);
+                    console.error(`[Mailwizz Node] Error stack: ${error.stack}`);
+                }
+                // Log response if available
+                if (error && typeof error === 'object' && 'response' in error) {
+                    const apiError = error;
+                    console.error(`[Mailwizz Node] API Response:`, JSON.stringify(apiError.response, null, 2));
+                }
                 if (this.continueOnFail()) {
                     // Poprawiona obsługa błędu
                     const errorData = {};
                     if (error instanceof Error) {
                         errorData.message = error.message;
+                        errorData.stack = error.stack;
                     }
                     else {
                         errorData.message = 'An unknown error occurred';
+                        errorData.error = JSON.stringify(error);
                     }
                     returnData.push({
                         json: {
