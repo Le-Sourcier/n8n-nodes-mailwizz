@@ -88,7 +88,8 @@ The MailWizz node can be used for various operations:
 3. **Manage Lists**
    - Resource: List
    - Operations: Create / Get / Get All
-   - Create brand-new lists (including company details, confirmation options, and notifications) or retrieve existing lists
+   - Create brand-new lists (including name, description, company details, confirmation options, and notifications) or retrieve existing lists
+   - MailWizz rejects empty values, so make sure the list name and description contain meaningful text rather than blank strings
 4. **Manage Templates**
    - Resource: Template
    - Operations: Create / Get / Get All

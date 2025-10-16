@@ -824,6 +824,22 @@ export class Mailwizz implements INodeType {
 				},
 			},
 			{
+				displayName: 'List Description',
+				name: 'listDescription',
+				type: 'string',
+				required: true,
+				typeOptions: {
+					rows: 3,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
 				displayName: 'Default From Email',
 				name: 'listFromEmail',
 				type: 'string',
@@ -1664,18 +1680,29 @@ export class Mailwizz implements INodeType {
 
 				if (resource === 'list') {
 					if (operation === 'create') {
-						const name = ensureString(this.getNodeParameter('listName', itemIndex));
-						const fromEmail = ensureString(this.getNodeParameter('listFromEmail', itemIndex));
-						const fromName = ensureString(this.getNodeParameter('listFromName', itemIndex));
-						const replyTo = ensureString(this.getNodeParameter('listReplyTo', itemIndex));
-						const company = ensureString(this.getNodeParameter('listCompanyName', itemIndex));
-						const address1 = ensureString(this.getNodeParameter('listAddress1', itemIndex));
-						const address2 = asString(this.getNodeParameter('listAddress2', itemIndex, '')) ?? '';
-						const country = ensureString(this.getNodeParameter('listCountry', itemIndex));
-						const state = asString(this.getNodeParameter('listState', itemIndex, '')) ?? '';
-						const city = ensureString(this.getNodeParameter('listCity', itemIndex));
-						const zip = ensureString(this.getNodeParameter('listZip', itemIndex));
-						const phone = asString(this.getNodeParameter('listPhone', itemIndex, '')) ?? '';
+						const getRequiredString = (parameter: string, errorMessage: string): string => {
+							const value = ensureString(this.getNodeParameter(parameter, itemIndex));
+							const trimmed = value.trim();
+							if (!trimmed) {
+								throw new NodeOperationError(this.getNode(), errorMessage, { itemIndex });
+							}
+							return trimmed;
+						};
+
+						const name = getRequiredString('listName', 'List name is required.');
+						const description = getRequiredString('listDescription', 'List description is required.');
+						const fromEmail = getRequiredString('listFromEmail', 'Default from email is required.');
+						const fromName = getRequiredString('listFromName', 'Default from name is required.');
+						const replyTo = getRequiredString('listReplyTo', 'Default reply-to email is required.');
+						const company = getRequiredString('listCompanyName', 'Company name is required.');
+						const address1 = getRequiredString('listAddress1', 'Company address line 1 is required.');
+						const country = getRequiredString('listCountry', 'Company country is required.');
+						const city = getRequiredString('listCity', 'Company city is required.');
+						const zip = getRequiredString('listZip', 'Company ZIP is required.');
+
+						const address2 = asString(this.getNodeParameter('listAddress2', itemIndex, ''))?.trim() ?? '';
+						const state = asString(this.getNodeParameter('listState', itemIndex, ''))?.trim() ?? '';
+						const phone = asString(this.getNodeParameter('listPhone', itemIndex, ''))?.trim() ?? '';
 
 						const options = this.getNodeParameter('listOptions', itemIndex, {}) as IDataObject;
 						const notifications = this.getNodeParameter('listNotifications', itemIndex, {}) as IDataObject;
@@ -1683,7 +1710,7 @@ export class Mailwizz implements INodeType {
 						const listPayload: IDataObject = {
 							general: {
 								name,
-								description: name,
+								description,
 							},
 							defaults: {
 								from_name: fromName,
@@ -1703,29 +1730,32 @@ export class Mailwizz implements INodeType {
 						};
 
 						const optionPayload: IDataObject = {};
-						if (options.subject) optionPayload.email_subscribe_subject = ensureString(options.subject);
-						if (options.fromName)
-							optionPayload.email_subscribe_from_name = ensureString(options.fromName);
-						if (options.fromEmail)
-							optionPayload.email_subscribe_from_email = ensureString(options.fromEmail);
-						if (options.replyTo) optionPayload.email_subscribe_reply_to = ensureString(options.replyTo);
-						if (options.welcomeSubject)
-							optionPayload.email_welcome_subject = ensureString(options.welcomeSubject);
-						if (options.sendWelcome)
-							optionPayload.send_welcome_email = ensureString(options.sendWelcome, 'yes');
-						if (options.sendConfirmation)
-							optionPayload.send_subscribe_confirmation = ensureString(options.sendConfirmation, 'yes');
+						const subscribeSubject = asString(options.subject)?.trim();
+						if (subscribeSubject) optionPayload.email_subscribe_subject = subscribeSubject;
+						const subscribeFromName = asString(options.fromName)?.trim();
+						if (subscribeFromName) optionPayload.email_subscribe_from_name = subscribeFromName;
+						const subscribeFromEmail = asString(options.fromEmail)?.trim();
+						if (subscribeFromEmail) optionPayload.email_subscribe_from_email = subscribeFromEmail;
+						const subscribeReplyTo = asString(options.replyTo)?.trim();
+						if (subscribeReplyTo) optionPayload.email_subscribe_reply_to = subscribeReplyTo;
+						const welcomeSubject = asString(options.welcomeSubject)?.trim();
+						if (welcomeSubject) optionPayload.email_welcome_subject = welcomeSubject;
+						const sendWelcome = asString(options.sendWelcome)?.trim();
+						if (sendWelcome) optionPayload.send_welcome_email = sendWelcome;
+						const sendConfirmation = asString(options.sendConfirmation)?.trim();
+						if (sendConfirmation) optionPayload.send_subscribe_confirmation = sendConfirmation;
 
 						if (Object.keys(optionPayload).length > 0) {
 							listPayload.options = optionPayload;
 						}
 
 						const notificationPayload: IDataObject = {};
-						if (notifications.subscribe)
-							notificationPayload.subscribe = ensureString(notifications.subscribe);
-						if (notifications.unsubscribe)
-							notificationPayload.unsubscribe = ensureString(notifications.unsubscribe);
-						if (notifications.daily) notificationPayload.daily = ensureString(notifications.daily);
+						const subscribeNotification = asString(notifications.subscribe)?.trim();
+						if (subscribeNotification) notificationPayload.subscribe = subscribeNotification;
+						const unsubscribeNotification = asString(notifications.unsubscribe)?.trim();
+						if (unsubscribeNotification) notificationPayload.unsubscribe = unsubscribeNotification;
+						const dailyNotification = asString(notifications.daily)?.trim();
+						if (dailyNotification) notificationPayload.daily = dailyNotification;
 
 						if (Object.keys(notificationPayload).length > 0) {
 							listPayload.notifications = notificationPayload;

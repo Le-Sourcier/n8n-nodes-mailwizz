@@ -765,6 +765,22 @@ class Mailwizz {
                     },
                 },
                 {
+                    displayName: 'List Description',
+                    name: 'listDescription',
+                    type: 'string',
+                    required: true,
+                    typeOptions: {
+                        rows: 3,
+                    },
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['list'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
                     displayName: 'Default From Email',
                     name: 'listFromEmail',
                     type: 'string',
@@ -1386,7 +1402,7 @@ class Mailwizz {
         };
     }
     async execute() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14;
         const items = this.getInputData();
         const returnData = [];
         for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
@@ -1523,24 +1539,33 @@ class Mailwizz {
                 }
                 if (resource === 'list') {
                     if (operation === 'create') {
-                        const name = ensureString(this.getNodeParameter('listName', itemIndex));
-                        const fromEmail = ensureString(this.getNodeParameter('listFromEmail', itemIndex));
-                        const fromName = ensureString(this.getNodeParameter('listFromName', itemIndex));
-                        const replyTo = ensureString(this.getNodeParameter('listReplyTo', itemIndex));
-                        const company = ensureString(this.getNodeParameter('listCompanyName', itemIndex));
-                        const address1 = ensureString(this.getNodeParameter('listAddress1', itemIndex));
-                        const address2 = (_h = asString(this.getNodeParameter('listAddress2', itemIndex, ''))) !== null && _h !== void 0 ? _h : '';
-                        const country = ensureString(this.getNodeParameter('listCountry', itemIndex));
-                        const state = (_j = asString(this.getNodeParameter('listState', itemIndex, ''))) !== null && _j !== void 0 ? _j : '';
-                        const city = ensureString(this.getNodeParameter('listCity', itemIndex));
-                        const zip = ensureString(this.getNodeParameter('listZip', itemIndex));
-                        const phone = (_k = asString(this.getNodeParameter('listPhone', itemIndex, ''))) !== null && _k !== void 0 ? _k : '';
+                        const getRequiredString = (parameter, errorMessage) => {
+                            const value = ensureString(this.getNodeParameter(parameter, itemIndex));
+                            const trimmed = value.trim();
+                            if (!trimmed) {
+                                throw new n8n_workflow_1.NodeOperationError(this.getNode(), errorMessage, { itemIndex });
+                            }
+                            return trimmed;
+                        };
+                        const name = getRequiredString('listName', 'List name is required.');
+                        const description = getRequiredString('listDescription', 'List description is required.');
+                        const fromEmail = getRequiredString('listFromEmail', 'Default from email is required.');
+                        const fromName = getRequiredString('listFromName', 'Default from name is required.');
+                        const replyTo = getRequiredString('listReplyTo', 'Default reply-to email is required.');
+                        const company = getRequiredString('listCompanyName', 'Company name is required.');
+                        const address1 = getRequiredString('listAddress1', 'Company address line 1 is required.');
+                        const country = getRequiredString('listCountry', 'Company country is required.');
+                        const city = getRequiredString('listCity', 'Company city is required.');
+                        const zip = getRequiredString('listZip', 'Company ZIP is required.');
+                        const address2 = (_j = (_h = asString(this.getNodeParameter('listAddress2', itemIndex, ''))) === null || _h === void 0 ? void 0 : _h.trim()) !== null && _j !== void 0 ? _j : '';
+                        const state = (_l = (_k = asString(this.getNodeParameter('listState', itemIndex, ''))) === null || _k === void 0 ? void 0 : _k.trim()) !== null && _l !== void 0 ? _l : '';
+                        const phone = (_o = (_m = asString(this.getNodeParameter('listPhone', itemIndex, ''))) === null || _m === void 0 ? void 0 : _m.trim()) !== null && _o !== void 0 ? _o : '';
                         const options = this.getNodeParameter('listOptions', itemIndex, {});
                         const notifications = this.getNodeParameter('listNotifications', itemIndex, {});
                         const listPayload = {
                             general: {
                                 name,
-                                description: name,
+                                description,
                             },
                             defaults: {
                                 from_name: fromName,
@@ -1559,36 +1584,46 @@ class Mailwizz {
                             },
                         };
                         const optionPayload = {};
-                        if (options.subject)
-                            optionPayload.email_subscribe_subject = ensureString(options.subject);
-                        if (options.fromName)
-                            optionPayload.email_subscribe_from_name = ensureString(options.fromName);
-                        if (options.fromEmail)
-                            optionPayload.email_subscribe_from_email = ensureString(options.fromEmail);
-                        if (options.replyTo)
-                            optionPayload.email_subscribe_reply_to = ensureString(options.replyTo);
-                        if (options.welcomeSubject)
-                            optionPayload.email_welcome_subject = ensureString(options.welcomeSubject);
-                        if (options.sendWelcome)
-                            optionPayload.send_welcome_email = ensureString(options.sendWelcome, 'yes');
-                        if (options.sendConfirmation)
-                            optionPayload.send_subscribe_confirmation = ensureString(options.sendConfirmation, 'yes');
+                        const subscribeSubject = (_p = asString(options.subject)) === null || _p === void 0 ? void 0 : _p.trim();
+                        if (subscribeSubject)
+                            optionPayload.email_subscribe_subject = subscribeSubject;
+                        const subscribeFromName = (_q = asString(options.fromName)) === null || _q === void 0 ? void 0 : _q.trim();
+                        if (subscribeFromName)
+                            optionPayload.email_subscribe_from_name = subscribeFromName;
+                        const subscribeFromEmail = (_r = asString(options.fromEmail)) === null || _r === void 0 ? void 0 : _r.trim();
+                        if (subscribeFromEmail)
+                            optionPayload.email_subscribe_from_email = subscribeFromEmail;
+                        const subscribeReplyTo = (_s = asString(options.replyTo)) === null || _s === void 0 ? void 0 : _s.trim();
+                        if (subscribeReplyTo)
+                            optionPayload.email_subscribe_reply_to = subscribeReplyTo;
+                        const welcomeSubject = (_t = asString(options.welcomeSubject)) === null || _t === void 0 ? void 0 : _t.trim();
+                        if (welcomeSubject)
+                            optionPayload.email_welcome_subject = welcomeSubject;
+                        const sendWelcome = (_u = asString(options.sendWelcome)) === null || _u === void 0 ? void 0 : _u.trim();
+                        if (sendWelcome)
+                            optionPayload.send_welcome_email = sendWelcome;
+                        const sendConfirmation = (_v = asString(options.sendConfirmation)) === null || _v === void 0 ? void 0 : _v.trim();
+                        if (sendConfirmation)
+                            optionPayload.send_subscribe_confirmation = sendConfirmation;
                         if (Object.keys(optionPayload).length > 0) {
                             listPayload.options = optionPayload;
                         }
                         const notificationPayload = {};
-                        if (notifications.subscribe)
-                            notificationPayload.subscribe = ensureString(notifications.subscribe);
-                        if (notifications.unsubscribe)
-                            notificationPayload.unsubscribe = ensureString(notifications.unsubscribe);
-                        if (notifications.daily)
-                            notificationPayload.daily = ensureString(notifications.daily);
+                        const subscribeNotification = (_w = asString(notifications.subscribe)) === null || _w === void 0 ? void 0 : _w.trim();
+                        if (subscribeNotification)
+                            notificationPayload.subscribe = subscribeNotification;
+                        const unsubscribeNotification = (_x = asString(notifications.unsubscribe)) === null || _x === void 0 ? void 0 : _x.trim();
+                        if (unsubscribeNotification)
+                            notificationPayload.unsubscribe = unsubscribeNotification;
+                        const dailyNotification = (_y = asString(notifications.daily)) === null || _y === void 0 ? void 0 : _y.trim();
+                        if (dailyNotification)
+                            notificationPayload.daily = dailyNotification;
                         if (Object.keys(notificationPayload).length > 0) {
                             listPayload.notifications = notificationPayload;
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/lists', { list: listPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_l = response) !== null && _l !== void 0 ? _l : {},
+                            json: (_z = response) !== null && _z !== void 0 ? _z : {},
                         });
                         continue;
                     }
@@ -1599,17 +1634,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_m = response) !== null && _m !== void 0 ? _m : {},
+                            json: (_0 = response) !== null && _0 !== void 0 ? _0 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_o = pagination.page) !== null && _o !== void 0 ? _o : 1) || 1;
-                        const perPage = Number((_p = pagination.perPage) !== null && _p !== void 0 ? _p : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_1 = pagination.page) !== null && _1 !== void 0 ? _1 : 1) || 1;
+                        const perPage = Number((_2 = pagination.perPage) !== null && _2 !== void 0 ? _2 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/lists', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_q = response) !== null && _q !== void 0 ? _q : {},
+                            json: (_3 = response) !== null && _3 !== void 0 ? _3 : {},
                         });
                         continue;
                     }
@@ -1652,7 +1687,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers/bulk`, { subscribers: subscribersPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_r = response) !== null && _r !== void 0 ? _r : {},
+                            json: (_4 = response) !== null && _4 !== void 0 ? _4 : {},
                         });
                         continue;
                     }
@@ -1685,7 +1720,7 @@ class Mailwizz {
                             template: templatePayload,
                         }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_s = response) !== null && _s !== void 0 ? _s : {},
+                            json: (_5 = response) !== null && _5 !== void 0 ? _5 : {},
                         });
                         continue;
                     }
@@ -1696,17 +1731,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_t = response) !== null && _t !== void 0 ? _t : {},
+                            json: (_6 = response) !== null && _6 !== void 0 ? _6 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_u = pagination.page) !== null && _u !== void 0 ? _u : 1) || 1;
-                        const perPage = Number((_v = pagination.perPage) !== null && _v !== void 0 ? _v : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_7 = pagination.page) !== null && _7 !== void 0 ? _7 : 1) || 1;
+                        const perPage = Number((_8 = pagination.perPage) !== null && _8 !== void 0 ? _8 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/templates', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_w = response) !== null && _w !== void 0 ? _w : {},
+                            json: (_9 = response) !== null && _9 !== void 0 ? _9 : {},
                         });
                         continue;
                     }
@@ -1751,7 +1786,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/transactional-emails', { transactional_email: transactionalPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_x = response) !== null && _x !== void 0 ? _x : {},
+                            json: (_10 = response) !== null && _10 !== void 0 ? _10 : {},
                         });
                         continue;
                     }
@@ -1764,17 +1799,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/transactional-emails/${emailId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_y = response) !== null && _y !== void 0 ? _y : {},
+                            json: (_11 = response) !== null && _11 !== void 0 ? _11 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_z = pagination.page) !== null && _z !== void 0 ? _z : 1) || 1;
-                        const perPage = Number((_0 = pagination.perPage) !== null && _0 !== void 0 ? _0 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_12 = pagination.page) !== null && _12 !== void 0 ? _12 : 1) || 1;
+                        const perPage = Number((_13 = pagination.perPage) !== null && _13 !== void 0 ? _13 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/transactional-emails', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_1 = response) !== null && _1 !== void 0 ? _1 : {},
+                            json: (_14 = response) !== null && _14 !== void 0 ? _14 : {},
                         });
                         continue;
                     }
