@@ -169,11 +169,11 @@ export class MailwizzApi implements ICredentialType {
 			name: 'privateKey',
 			type: 'string',
 			default: '',
-			required: true,
 			typeOptions: {
 				password: true,
 			},
-			description: 'Your MailWizz private API key',
+			description:
+				'Your MailWizz private API key. For MailWizz v2 and newer you can reuse the public key here.',
 		},
 		{
 			displayName: 'API URL',
@@ -212,8 +212,14 @@ export class MailwizzApi implements ICredentialType {
 			allowUnauthorizedCerts?: boolean;
 		};
 
-		if (!publicKey || !privateKey || !baseUrl) {
+		if (!publicKey || !baseUrl) {
 			throw new Error('MailWizz credentials are not fully configured.');
+		}
+
+		const signingKey = privateKey && privateKey.trim().length > 0 ? privateKey : publicKey;
+
+		if (!signingKey) {
+			throw new Error('MailWizz private key (or public key fallback) is required to sign requests.');
 		}
 
 		const method = (requestOptions.method ?? 'GET').toUpperCase() as IHttpRequestMethods;
@@ -251,7 +257,7 @@ export class MailwizzApi implements ICredentialType {
 			delete requestOptions.qs;
 		}
 
-		const signature = buildSignature(method, resolvedUrl, headers, body, query, privateKey);
+		const signature = buildSignature(method, resolvedUrl, headers, body, query, signingKey);
 
 		headers['X-MW-SIGNATURE'] = signature;
 		headers['X-HTTP-Method-Override'] = method;

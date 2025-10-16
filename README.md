@@ -23,7 +23,7 @@ This package provides a modern integration between n8n and self-hosted MailWizz 
 
 ```bash
 # Edit the file /app/data/env.sh
-export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.1"
+export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.2"
 export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 
 # Restart the n8n application from Cloudron dashboard
@@ -32,7 +32,7 @@ export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 #### In Standard n8n Environment
 
 ```bash
-npm install n8n-nodes-mailwizz-ls@2.0.1
+npm install n8n-nodes-mailwizz-ls@2.0.2
 ```
 
 ### Documentation
@@ -47,7 +47,7 @@ For detailed information on installation, configuration, and usage, see the docu
 ### Requirements
 
 - n8n version 1.80.0 or later
-- MailWizz self-hosted instance with API v2 enabled (public + private keys)
+- MailWizz self-hosted instance with API v2 enabled (public key; reuse for private key on v2+, or supply the generated private key for older versions)
 - WordPress instance with REST API access (for WordPress integration)
 
 ### Contributing
@@ -81,7 +81,7 @@ Ten pakiet zapewnia integrację między n8n a MailWizz, umożliwiając automatyz
 
 ```bash
 # Edytuj plik /app/data/env.sh
-export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.1"
+export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.2"
 export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 
 # Zrestartuj aplikację n8n z panelu Cloudron
@@ -90,7 +90,7 @@ export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 #### W Standardowym Środowisku n8n
 
 ```bash
-npm install n8n-nodes-mailwizz-ls@2.0.1
+npm install n8n-nodes-mailwizz-ls@2.0.2
 ```
 
 ### Dokumentacja
@@ -105,7 +105,7 @@ Szczegółowe informacje na temat instalacji, konfiguracji i użytkowania znajdz
 ### Wymagania
 
 - n8n w wersji 1.80.0 lub nowszej
-- Samodzielna instancja MailWizz z aktywnym API (klucze publiczny i prywatny)
+- Samodzielna instancja MailWizz z aktywnym API (klucz publiczny; w wersjach v2+ można go użyć także jako prywatny, w starszych wymagany jest osobny klucz prywatny)
 - Instancja WordPress z dostępem do REST API (dla integracji z WordPress)
 
 ### Współpraca

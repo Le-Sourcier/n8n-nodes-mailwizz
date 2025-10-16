@@ -23,7 +23,7 @@ To use the MailWizz node for n8n, you need both the **public** and **private** A
 
 4. **Copy the key pair**:
    - From the list of existing keys, copy both the **Public key** and the **Private key**
-   - Each key is typically a long alphanumeric string
+   - Each key is typically a long alphanumeric string; on MailWizz v2 and newer the private key value may match the public key and can be reused interchangeably
 
 ![Example MailWizz API Key Screen](images/mailwizz-api-key-screen.png)
 
@@ -84,7 +84,7 @@ Aby korzystać z node'a MailWizz dla n8n, potrzebujesz **publicznego** i **prywa
 
 4. **Skopiuj parę kluczy**:
    - Z listy istniejących kluczy skopiuj zarówno **Publiczny klucz**, jak i **Prywatny klucz**
-   - Każdy z nich to długi ciąg znaków alfanumerycznych
+   - Każdy z nich to długi ciąg znaków alfanumerycznych; w MailWizz v2 i nowszych wartość klucza prywatnego może być identyczna jak publicznego i można używać jej zamiennie
 
 ![Przykładowy ekran klucza API MailWizz](images/mailwizz-api-key-screen.png)
 

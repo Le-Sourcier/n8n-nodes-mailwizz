@@ -23,7 +23,7 @@ If you're running n8n in a Cloudron environment, you'll need to add the node to 
    - Add or modify the following lines:
    ```bash
    # Add n8n-nodes-mailwizz-ls to the list of modules
-   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.1"
+   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.2"
    
    # Add mailwizz to the list of allowed external modules
    export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
@@ -42,7 +42,7 @@ If you're running n8n in a standard environment:
 1. **Install the Node**
    - Run the following command in your n8n installation directory:
    ```bash
-   npm install n8n-nodes-mailwizz-ls@2.0.1
+   npm install n8n-nodes-mailwizz-ls@2.0.2
    ```
 
 2. **Restart n8n**
@@ -61,8 +61,8 @@ Once the node is installed, you need to set up your MailWizz API credentials:
    - Click "Add Credential"
    - Select "MailWizz API"
    - Fill in the details:
-     - **Public API Key**: Your MailWizz public API key (see [How to Find Your MailWizz API Key Pair](api-key-info.md))
-     - **Private API Key**: Your MailWizz private API key
+     - **Public API Key**: Your MailWizz public API key (see [How to Find Your MailWizz API Key](api-key-info.md))
+     - **Private API Key**: Optional for MailWizz v2+. If absent, reuse the public key. Older versions require the generated private key.
      - **API URL**: The URL to your MailWizz API (e.g., https://your-domain.com/api)
    - Click "Save"
 
@@ -136,7 +136,7 @@ Jeśli używasz n8n w środowisku Cloudron, musisz dodać node do zmiennych śro
    - Dodaj lub zmodyfikuj następujące linie:
    ```bash
    # Dodaj n8n-nodes-mailwizz-ls do listy modułów
-   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.1"
+   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.2"
    
    # Dodaj mailwizz do listy dozwolonych zewnętrznych modułów
    export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
@@ -155,7 +155,7 @@ Jeśli używasz n8n w standardowym środowisku:
 1. **Instalacja Node'a**
    - Uruchom następującą komendę w katalogu instalacyjnym n8n:
    ```bash
-   npm install n8n-nodes-mailwizz-ls@2.0.1
+   npm install n8n-nodes-mailwizz-ls@2.0.2
    ```
 
 2. **Restart n8n**
@@ -174,8 +174,8 @@ Po zainstalowaniu node'a, musisz skonfigurować dane uwierzytelniające do API M
    - Kliknij "Add Credential"
    - Wybierz "MailWizz API"
    - Uzupełnij dane:
-     - **Publiczny Klucz API**: Twój publiczny klucz API MailWizz (zobacz [Jak Znaleźć Klucze API MailWizz](api-key-info.md))
-     - **Prywatny Klucz API**: Twój prywatny klucz API MailWizz
+     - **Publiczny Klucz API**: Twój publiczny klucz API MailWizz (zobacz [Jak Znaleźć Klucz API MailWizz](api-key-info.md))
+     - **Prywatny Klucz API**: Opcjonalny dla MailWizz v2+. Jeśli go brak, użyj tego samego klucza publicznego. Starsze wersje wymagają wygenerowanego klucza prywatnego.
      - **API URL**: URL do Twojego API MailWizz (np. https://twoja-domena.com/api)
    - Kliknij "Save"
 
