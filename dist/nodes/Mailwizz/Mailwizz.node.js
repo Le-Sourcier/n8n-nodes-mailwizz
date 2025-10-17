@@ -140,12 +140,12 @@ class Mailwizz {
             },
             inputs: [
                 {
-                    type: n8n_workflow_1.NodeConnectionType.Main,
+                    type: 'main',
                 },
             ],
             outputs: [
                 {
-                    type: n8n_workflow_1.NodeConnectionType.Main,
+                    type: 'main',
                 },
             ],
             credentials: [

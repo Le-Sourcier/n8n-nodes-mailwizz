@@ -9,7 +9,6 @@ import {
 	JsonObject,
 	NodeApiError,
 	NodeOperationError,
-	NodeConnectionType,
 } from 'n8n-workflow';
 
 import { mailwizzApiRequest } from './GenericFunctions';
@@ -199,12 +198,12 @@ export class Mailwizz implements INodeType {
 		},
 		inputs: [
 			{
-				type: NodeConnectionType.Main,
+				type: 'main',
 			},
 		],
 		outputs: [
 			{
-				type: NodeConnectionType.Main,
+				type: 'main',
 			},
 		],
 		credentials: [
