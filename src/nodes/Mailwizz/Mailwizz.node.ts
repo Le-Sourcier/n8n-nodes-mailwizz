@@ -236,6 +236,10 @@ export class Mailwizz implements INodeType {
 						value: 'subscriber',
 					},
 					{
+						name: 'List Segment',
+						value: 'segment',
+					},
+					{
 						name: 'Transactional Email',
 						value: 'transactionalEmail',
 					},
@@ -266,6 +270,24 @@ export class Mailwizz implements INodeType {
 						value: 'get',
 						action: 'Get a campaign',
 						description: 'Retrieve a MailWizz campaign',
+					},
+					{
+						name: 'Track Click',
+						value: 'trackClick',
+						action: 'Track a subscriber click',
+						description: 'Track a subscriber click for a campaign URL',
+					},
+					{
+						name: 'Track Open',
+						value: 'trackOpen',
+						action: 'Track a subscriber open',
+						description: 'Track a subscriber open event for a campaign',
+					},
+					{
+						name: 'Track Unsubscribe',
+						value: 'trackUnsubscribe',
+						action: 'Track a subscriber unsubscribe',
+						description: 'Track a subscriber unsubscribe for a campaign',
 					},
 				],
 				default: 'create',
@@ -346,13 +368,117 @@ export class Mailwizz implements INodeType {
 				},
 				options: [
 					{
+						name: 'Create',
+						value: 'create',
+						action: 'Create a subscriber',
+						description: 'Create a subscriber inside a list',
+					},
+					{
 						name: 'Create Bulk',
 						value: 'createBulk',
 						action: 'Create subscribers in bulk',
 						description: 'Create multiple subscribers inside a list',
 					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						action: 'Delete a subscriber',
+						description: 'Delete a subscriber from a list',
+					},
+					{
+						name: 'Get',
+						value: 'get',
+						action: 'Get a subscriber',
+						description: 'Retrieve a subscriber by unique identifier',
+					},
+					{
+						name: 'Get Confirmed',
+						value: 'getConfirmed',
+						action: 'Get confirmed subscribers',
+						description: 'Retrieve confirmed subscribers from a list',
+					},
+					{
+						name: 'Get Many',
+						value: 'getAll',
+						action: 'Get subscribers',
+						description: 'Retrieve subscribers from a list',
+					},
+					{
+						name: 'Get Unconfirmed',
+						value: 'getUnconfirmed',
+						action: 'Get unconfirmed subscribers',
+						description: 'Retrieve unconfirmed subscribers from a list',
+					},
+					{
+						name: 'Get Unsubscribed',
+						value: 'getUnsubscribed',
+						action: 'Get unsubscribed subscribers',
+						description: 'Retrieve unsubscribed subscribers from a list',
+					},
+					{
+						name: 'Unsubscribe by Email',
+						value: 'unsubscribeByEmail',
+						action: 'Unsubscribe a subscriber by email',
+						description: 'Unsubscribe a subscriber by email address in a list',
+					},
+					{
+						name: 'Update',
+						value: 'update',
+						action: 'Update a subscriber',
+						description: 'Update a subscriber inside a list',
+					},
+					{
+						name: 'Update by Email',
+						value: 'updateByEmail',
+						action: 'Update a subscriber by email',
+						description: 'Update a subscriber identified by email address in a list',
+					},
 				],
-				default: 'createBulk',
+				default: 'getAll',
+				noDataExpression: true,
+			},
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['segment'],
+					},
+				},
+				options: [
+					{
+						name: 'Create',
+						value: 'create',
+						action: 'Create a list segment',
+						description: 'Create a segment inside a list',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						action: 'Delete a list segment',
+						description: 'Delete a segment from a list',
+					},
+					{
+						name: 'Get',
+						value: 'get',
+						action: 'Get a list segment',
+						description: 'Retrieve a segment from a list',
+					},
+					{
+						name: 'Get Many',
+						value: 'getAll',
+						action: 'Get list segments',
+						description: 'Retrieve segments from a list',
+					},
+					{
+						name: 'Update',
+						value: 'update',
+						action: 'Update a list segment',
+						description: 'Update a segment inside a list',
+					},
+				],
+				default: 'getAll',
 				noDataExpression: true,
 			},
 			{
@@ -471,7 +597,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['campaign'],
-						operation: ['get'],
+						operation: ['get', 'trackClick', 'trackOpen', 'trackUnsubscribe'],
 					},
 				},
 				description: 'Unique identifier of the campaign in MailWizz',
@@ -515,6 +641,69 @@ export class Mailwizz implements INodeType {
 						useWpSubject: [false],
 					},
 				},
+			},
+			{
+				displayName: 'Subscriber ID',
+				name: 'trackingSubscriberId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['campaign'],
+						operation: ['trackClick', 'trackOpen', 'trackUnsubscribe'],
+					},
+				},
+				description: 'Subscriber unique identifier used for campaign tracking',
+			},
+			{
+				displayName: 'URL Hash',
+				name: 'trackingUrlHash',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['campaign'],
+						operation: ['trackClick'],
+					},
+				},
+				description: 'URL hash that identifies the tracked campaign link',
+			},
+			{
+				displayName: 'Tracking Details',
+				name: 'trackingDetails',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['campaign'],
+						operation: ['trackUnsubscribe'],
+					},
+				},
+				options: [
+					{
+						displayName: 'IP Address',
+						name: 'ipAddress',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'Reason',
+						name: 'reason',
+						type: 'string',
+						default: '',
+						typeOptions: {
+							rows: 2,
+						},
+					},
+					{
+						displayName: 'User Agent',
+						name: 'userAgent',
+						type: 'string',
+						default: '',
+					},
+				],
 			},
 			{
 				displayName: 'WordPress Subject Field',
@@ -772,13 +961,25 @@ export class Mailwizz implements INodeType {
 				type: 'string',
 				required: true,
 				default: '',
-				displayOptions: {
-					show: {
-						resource: ['subscriber'],
-						operation: ['createBulk'],
+					displayOptions: {
+						show: {
+							resource: ['subscriber'],
+							operation: [
+								'create',
+								'createBulk',
+								'delete',
+								'get',
+								'getAll',
+								'getConfirmed',
+								'getUnconfirmed',
+								'getUnsubscribed',
+								'unsubscribeByEmail',
+								'update',
+								'updateByEmail',
+							],
+						},
 					},
-				},
-				description: 'Identifier of the list that the subscribers will be added to',
+					description: 'Identifier of the list that the subscribers will be added to',
 			},
 			{
 				displayName: 'Subscribers',
@@ -796,6 +997,139 @@ export class Mailwizz implements INodeType {
 				},
 				required: true,
 				description: 'JSON array of subscriber objects to create in MailWizz',
+			},
+			{
+				displayName: 'Subscriber ID',
+				name: 'subscriberId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['subscriber'],
+						operation: ['delete', 'get', 'update'],
+					},
+				},
+				description: 'Unique identifier of the subscriber in MailWizz',
+			},
+			{
+				displayName: 'Subscriber Email',
+				name: 'subscriberEmail',
+				type: 'string',
+				required: true,
+				default: '={{$json["EMAIL"]}}',
+				displayOptions: {
+					show: {
+						resource: ['subscriber'],
+						operation: ['create', 'updateByEmail', 'unsubscribeByEmail'],
+					},
+				},
+				description: 'Email address of the subscriber',
+			},
+			{
+				displayName: 'New Subscriber Email',
+				name: 'newSubscriberEmail',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['subscriber'],
+						operation: ['update', 'updateByEmail'],
+					},
+				},
+				description: 'Optional new email address for the subscriber',
+			},
+			{
+				displayName: 'Subscriber Fields',
+				name: 'subscriberFields',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValueButtonText: 'Add Field',
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['subscriber'],
+						operation: ['create', 'update', 'updateByEmail'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Field',
+						name: 'field',
+						values: [
+							{
+								displayName: 'Field Tag',
+								name: 'tag',
+								type: 'string',
+								required: true,
+								default: '',
+								placeholder: 'e.g. FNAME',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								required: true,
+								default: '',
+							},
+						],
+					},
+				],
+				description: 'Additional field tag/value pairs to include in the subscriber payload',
+			},
+			{
+				displayName: 'Subscriber Data (JSON)',
+				name: 'subscriberDataJson',
+				type: 'json',
+				typeOptions: {
+					alwaysOpenEditWindow: true,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['subscriber'],
+						operation: ['create', 'update', 'updateByEmail'],
+					},
+				},
+				description:
+					'Advanced JSON object containing MailWizz field tags as keys; merged with other subscriber fields',
+			},
+			{
+				displayName: 'Unsubscribe Details',
+				name: 'unsubscribeDetails',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['subscriber'],
+						operation: ['unsubscribeByEmail'],
+					},
+				},
+				options: [
+					{
+						displayName: 'IP Address',
+						name: 'ipAddress',
+						type: 'string',
+						default: '',
+					},
+					{
+						displayName: 'Reason',
+						name: 'reason',
+						type: 'string',
+						default: '',
+						typeOptions: {
+							rows: 2,
+						},
+					},
+					{
+						displayName: 'User Agent',
+						name: 'userAgent',
+						type: 'string',
+						default: '',
+					},
+				],
 			},
 			{
 				displayName: 'List ID',
@@ -1168,6 +1502,243 @@ export class Mailwizz implements INodeType {
 				],
 			},
 			{
+				displayName: 'List ID',
+				name: 'listId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['segment'],
+						operation: ['create', 'delete', 'get', 'getAll', 'update'],
+					},
+				},
+				description: 'Identifier of the list that owns the segment',
+			},
+			{
+				displayName: 'Segment ID',
+				name: 'segmentId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['segment'],
+						operation: ['delete', 'get', 'update'],
+					},
+				},
+				description: 'Unique identifier of the segment within the list',
+			},
+			{
+				displayName: 'Segment Name',
+				name: 'segmentName',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['segment'],
+						operation: ['create', 'update'],
+					},
+				},
+			},
+			{
+				displayName: 'Match Operator',
+				name: 'segmentMatchOperator',
+				type: 'options',
+				options: [
+					{
+						name: 'Match All',
+						value: 'all',
+					},
+					{
+						name: 'Match Any',
+						value: 'any',
+					},
+				],
+				required: true,
+				default: 'all',
+				displayOptions: {
+					show: {
+						resource: ['segment'],
+						operation: ['create', 'update'],
+					},
+				},
+				description: 'Whether subscribers must meet all conditions or any condition to join the segment',
+			},
+			{
+				displayName: 'Conditions',
+				name: 'segmentConditions',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValueButtonText: 'Add Condition',
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['segment'],
+						operation: ['create', 'update'],
+					},
+				},
+				options: [
+					{
+						name: 'condition',
+						displayName: 'Condition',
+						values: [
+							{
+								displayName: 'Field ID',
+								name: 'fieldId',
+								type: 'string',
+								required: true,
+								default: '',
+							},
+							{
+								displayName: 'Operator ID',
+								name: 'operatorId',
+								type: 'string',
+								required: true,
+								default: '',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								required: true,
+								default: '',
+							},
+						],
+					},
+				],
+				description: 'List field conditions that determine segment membership',
+			},
+			{
+				displayName: 'Campaign Conditions',
+				name: 'segmentCampaignConditions',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValueButtonText: 'Add Campaign Condition',
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['segment'],
+						operation: ['create', 'update'],
+					},
+				},
+				options: [
+					{
+						name: 'condition',
+						displayName: 'Condition',
+						values: [
+							{
+								displayName: 'Action',
+								name: 'action',
+								type: 'options',
+								options: [
+									{
+										name: 'Click',
+										value: 'click',
+									},
+									{
+										name: 'Open',
+										value: 'open',
+									},
+								],
+								required: true,
+								default: 'click',
+							},
+							{
+								displayName: 'Campaign ID',
+								name: 'campaignId',
+								type: 'string',
+								required: true,
+								default: '',
+							},
+							{
+								displayName: 'Time Comparison Operator',
+								name: 'timeComparisonOperator',
+								type: 'options',
+								options: [
+									{
+										name: 'Equals',
+										value: 'eq',
+									},
+									{
+										name: 'Greater Than',
+										value: 'gt',
+									},
+									{
+										name: 'Greater Than Or Equals',
+										value: 'gte',
+									},
+									{
+										name: 'Less Than',
+										value: 'lt',
+									},
+									{
+										name: 'Less Than Or Equals',
+										value: 'lte',
+									},
+								],
+								required: true,
+								default: 'gte',
+							},
+							{
+								displayName: 'Time Value',
+								name: 'timeValue',
+								type: 'number',
+								typeOptions: {
+									minValue: 1,
+								},
+								required: true,
+								default: 1,
+							},
+							{
+								displayName: 'Time Unit',
+								name: 'timeUnit',
+								type: 'options',
+								options: [
+									{
+										name: 'Day',
+										value: 'day',
+									},
+									{
+										name: 'Month',
+										value: 'month',
+									},
+									{
+										name: 'Year',
+										value: 'year',
+									},
+								],
+								required: true,
+								default: 'day',
+							},
+						],
+					},
+				],
+				description: 'Campaign activity conditions that refine segment membership',
+			},
+			{
+				displayName: 'Segment Data (JSON)',
+				name: 'segmentDataJson',
+				type: 'json',
+				typeOptions: {
+					alwaysOpenEditWindow: true,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['segment'],
+						operation: ['create', 'update'],
+					},
+				},
+				description:
+					'Advanced JSON payload merged into the request data, allowing full control over segment creation',
+			},
+			{
 				displayName: 'Template ID',
 				name: 'templateId',
 				type: 'string',
@@ -1404,8 +1975,8 @@ export class Mailwizz implements INodeType {
 				default: {},
 				displayOptions: {
 					show: {
-						resource: ['list', 'template', 'transactionalEmail'],
-						operation: ['getAll'],
+						resource: ['list', 'template', 'transactionalEmail', 'subscriber', 'segment'],
+						operation: ['getAll', 'getConfirmed', 'getUnconfirmed', 'getUnsubscribed'],
 					},
 				},
 				options: [
@@ -1755,6 +2326,105 @@ export class Mailwizz implements INodeType {
 					continue;
 				}
 
+				if (resource === 'campaign' && operation === 'trackClick') {
+					const campaignId = ensureString(this.getNodeParameter('campaignId', itemIndex));
+					const subscriberId = ensureString(this.getNodeParameter('trackingSubscriberId', itemIndex));
+					const urlHash = ensureString(this.getNodeParameter('trackingUrlHash', itemIndex));
+
+					if (!campaignId || !subscriberId || !urlHash) {
+						throw new NodeOperationError(
+							this.getNode(),
+							'Campaign ID, subscriber ID, and URL hash are required.',
+							{ itemIndex },
+						);
+					}
+
+					const response = await mailwizzApiRequest.call(
+						this,
+						'GET',
+						`/campaigns/${campaignId}/track-url/${subscriberId}/${urlHash}`,
+						{},
+						{},
+						{},
+						itemIndex,
+					);
+
+					returnData.push({
+						json: (response as IDataObject) ?? {},
+					});
+					continue;
+				}
+
+				if (resource === 'campaign' && operation === 'trackOpen') {
+					const campaignId = ensureString(this.getNodeParameter('campaignId', itemIndex));
+					const subscriberId = ensureString(this.getNodeParameter('trackingSubscriberId', itemIndex));
+
+					if (!campaignId || !subscriberId) {
+						throw new NodeOperationError(this.getNode(), 'Campaign ID and subscriber ID are required.', {
+							itemIndex,
+						});
+					}
+
+					const response = await mailwizzApiRequest.call(
+						this,
+						'GET',
+						`/campaigns/${campaignId}/track-opening/${subscriberId}`,
+						{},
+						{},
+						{},
+						itemIndex,
+					);
+
+					returnData.push({
+						json: (response as IDataObject) ?? {},
+					});
+					continue;
+				}
+
+				if (resource === 'campaign' && operation === 'trackUnsubscribe') {
+					const campaignId = ensureString(this.getNodeParameter('campaignId', itemIndex));
+					const subscriberId = ensureString(this.getNodeParameter('trackingSubscriberId', itemIndex));
+					const trackingDetails = this.getNodeParameter('trackingDetails', itemIndex, {}) as IDataObject;
+
+					if (!campaignId || !subscriberId) {
+						throw new NodeOperationError(this.getNode(), 'Campaign ID and subscriber ID are required.', {
+							itemIndex,
+						});
+					}
+
+					const payload: IDataObject = {};
+					const ipAddress = asString(trackingDetails.ipAddress)?.trim();
+					const userAgent = asString(trackingDetails.userAgent)?.trim();
+					const reason = asString(trackingDetails.reason)?.trim();
+
+					if (ipAddress) {
+						payload.ip_address = ipAddress;
+					}
+
+					if (userAgent) {
+						payload.user_agent = userAgent;
+					}
+
+					if (reason) {
+						payload.reason = reason;
+					}
+
+					const response = await mailwizzApiRequest.call(
+						this,
+						'POST',
+						`/campaigns/${campaignId}/track-unsubscribe/${subscriberId}`,
+						Object.keys(payload).length > 0 ? { data: payload } : {},
+						{},
+						{},
+						itemIndex,
+					);
+
+					returnData.push({
+						json: (response as IDataObject) ?? {},
+					});
+					continue;
+				}
+
 				if (resource === 'list') {
 					if (operation === 'create') {
 						const getRequiredString = (parameter: string, errorMessage: string): string => {
@@ -1783,6 +2453,14 @@ export class Mailwizz implements INodeType {
 						const zoneName = asString(this.getNodeParameter('listZoneName', itemIndex, ''))?.trim() ?? '';
 						const phone = asString(this.getNodeParameter('listPhone', itemIndex, ''))?.trim() ?? '';
 
+						if (!state && !zoneName) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Provide either the company state or the company zone name.',
+								{ itemIndex },
+							);
+						}
+
 						const options = this.getNodeParameter('listOptions', itemIndex, {}) as IDataObject;
 						const notifications = this.getNodeParameter('listNotifications', itemIndex, {}) as IDataObject;
 
@@ -1800,11 +2478,14 @@ export class Mailwizz implements INodeType {
 							name: companyName,
 							address_1: address1,
 							country,
-							zone: state,
 						};
 
 						if (address2) {
 							companyPayload.address_2 = address2;
+						}
+
+						if (state) {
+							companyPayload.zone = state;
 						}
 
 						if (zoneName) {
@@ -1932,12 +2613,101 @@ export class Mailwizz implements INodeType {
 				}
 
 				if (resource === 'subscriber') {
-					if (operation === 'createBulk') {
-						const listId = ensureString(this.getNodeParameter('listId', itemIndex));
-						if (!listId) {
-							throw new NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+					const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+					if (!listId) {
+						throw new NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+					}
+
+					const parseJsonParameter = (parameterName: string): IDataObject => {
+						const rawValue = this.getNodeParameter(parameterName, itemIndex, '') as unknown;
+						if (typeof rawValue === 'string') {
+							const trimmed = rawValue.trim();
+							if (trimmed.length === 0) {
+								return {};
+							}
+							try {
+								const parsed = JSON.parse(trimmed);
+								return isRecord(parsed) ? (parsed as IDataObject) : {};
+							} catch (error) {
+								throw new NodeOperationError(
+									this.getNode(),
+									`Parameter "${parameterName}" must be valid JSON.`,
+									{ itemIndex },
+								);
+							}
 						}
 
+						if (isRecord(rawValue)) {
+							return rawValue as IDataObject;
+						}
+
+						return {};
+					};
+
+					const collectFieldPairs = (): IDataObject => {
+						const rawFields = this.getNodeParameter('subscriberFields', itemIndex, {}) as IDataObject;
+						const records = Array.isArray(rawFields.field) ? (rawFields.field as IDataObject[]) : [];
+						const fieldData: IDataObject = {};
+
+						for (const entry of records) {
+							const tag = asString(entry.tag)?.trim();
+							if (!tag) {
+								continue;
+							}
+							fieldData[tag.toUpperCase()] = entry.value;
+						}
+
+						return fieldData;
+					};
+
+					const buildSubscriberData = (baseEmail?: string, overrideEmail?: string): IDataObject => {
+						const data: IDataObject = {};
+
+						const jsonData = parseJsonParameter('subscriberDataJson');
+						for (const [key, value] of Object.entries(jsonData)) {
+							data[key] = value;
+						}
+
+						const fieldPairs = collectFieldPairs();
+						for (const [key, value] of Object.entries(fieldPairs)) {
+							data[key] = value;
+						}
+
+						if (baseEmail) {
+							data.EMAIL = baseEmail;
+						}
+
+						if (overrideEmail) {
+							data.EMAIL = overrideEmail;
+						}
+
+						return data;
+					};
+
+					const findSubscriberByEmail = async (email: string): Promise<IDataObject> => {
+						const response = await mailwizzApiRequest.call(
+							this,
+							'GET',
+							`/lists/${listId}/subscribers/search-by-email`,
+							{},
+							{ EMAIL: email },
+							{},
+							itemIndex,
+						);
+
+						const record = getFirstRecord(response as IDataObject);
+						if (!isRecord(record)) {
+							throw new NodeOperationError(
+								this.getNode(),
+								`Subscriber with email "${email}" was not found in the list.`,
+								{ itemIndex },
+							);
+						}
+
+						return record;
+					};
+
+					if (operation === 'createBulk') {
 						const rawSubscribers = this.getNodeParameter('subscribers', itemIndex);
 
 						const resolveSubscribers = (value: unknown): IDataObject[] => {
@@ -1987,6 +2757,497 @@ export class Mailwizz implements INodeType {
 							'POST',
 							`/lists/${listId}/subscribers/bulk`,
 							{ subscribers: subscribersPayload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'create') {
+						const subscriberEmail = ensureString(this.getNodeParameter('subscriberEmail', itemIndex)).trim();
+						if (!subscriberEmail) {
+							throw new NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
+						}
+
+						const payload = buildSubscriberData(subscriberEmail);
+
+						if (!asString(payload.EMAIL)) {
+							throw new NodeOperationError(this.getNode(), 'Subscriber email is required.', {
+								itemIndex,
+							});
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'POST',
+							`/lists/${listId}/subscribers`,
+							{ data: payload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'get') {
+						const subscriberId = ensureString(this.getNodeParameter('subscriberId', itemIndex));
+						if (!subscriberId) {
+							throw new NodeOperationError(this.getNode(), 'Subscriber ID is required.', { itemIndex });
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'GET',
+							`/lists/${listId}/subscribers/${subscriberId}`,
+							{},
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'getAll' || operation === 'getConfirmed' || operation === 'getUnconfirmed' || operation === 'getUnsubscribed') {
+						const pagination = this.getNodeParameter('pagination', itemIndex, {}) as IDataObject;
+						const page = Number(pagination.page ?? 1) || 1;
+						const perPage =
+							Number(pagination.perPage ?? DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+
+						const query: IDataObject = {
+							page,
+							per_page: perPage,
+						};
+
+						if (operation === 'getConfirmed') {
+							query.status = 'confirmed';
+						} else if (operation === 'getUnconfirmed') {
+							query.status = 'unconfirmed';
+						} else if (operation === 'getUnsubscribed') {
+							query.status = 'unsubscribed';
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'GET',
+							`/lists/${listId}/subscribers`,
+							{},
+							query,
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'update') {
+						const subscriberId = ensureString(this.getNodeParameter('subscriberId', itemIndex));
+						if (!subscriberId) {
+							throw new NodeOperationError(this.getNode(), 'Subscriber ID is required.', { itemIndex });
+						}
+
+						const newEmail = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))?.trim();
+						const payload = buildSubscriberData(undefined, newEmail);
+
+						if (Object.keys(payload).length === 0) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Provide at least one field to update for the subscriber.',
+								{ itemIndex },
+							);
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'PUT',
+							`/lists/${listId}/subscribers/${subscriberId}`,
+							{ data: payload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'updateByEmail') {
+						const subscriberEmail = ensureString(this.getNodeParameter('subscriberEmail', itemIndex)).trim();
+						if (!subscriberEmail) {
+							throw new NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
+						}
+
+						const record = await findSubscriberByEmail(subscriberEmail);
+						const subscriberUid = asString(record.subscriber_uid) ?? asString(record.uid);
+
+						if (!subscriberUid) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Unable to resolve subscriber unique identifier.',
+								{ itemIndex },
+							);
+						}
+
+						const newEmail = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))?.trim();
+						const payload = buildSubscriberData(undefined, newEmail);
+
+						if (Object.keys(payload).length === 0) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Provide at least one field to update for the subscriber.',
+								{ itemIndex },
+							);
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'PUT',
+							`/lists/${listId}/subscribers/${subscriberUid}`,
+							{ data: payload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'unsubscribeByEmail') {
+						const subscriberEmail = ensureString(this.getNodeParameter('subscriberEmail', itemIndex)).trim();
+						if (!subscriberEmail) {
+							throw new NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
+						}
+
+						const record = await findSubscriberByEmail(subscriberEmail);
+						const subscriberUid = asString(record.subscriber_uid) ?? asString(record.uid);
+
+						if (!subscriberUid) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Unable to resolve subscriber unique identifier.',
+								{ itemIndex },
+							);
+						}
+
+						const details = this.getNodeParameter('unsubscribeDetails', itemIndex, {}) as IDataObject;
+						const payload: IDataObject = {};
+						const ipAddress = asString(details.ipAddress)?.trim();
+						const userAgent = asString(details.userAgent)?.trim();
+						const reason = asString(details.reason)?.trim();
+
+						if (ipAddress) {
+							payload.ip_address = ipAddress;
+						}
+
+						if (userAgent) {
+							payload.user_agent = userAgent;
+						}
+
+						if (reason) {
+							payload.reason = reason;
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'PUT',
+							`/lists/${listId}/subscribers/${subscriberUid}/unsubscribe`,
+							Object.keys(payload).length > 0 ? { data: payload } : {},
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'delete') {
+						const subscriberId = ensureString(this.getNodeParameter('subscriberId', itemIndex));
+						if (!subscriberId) {
+							throw new NodeOperationError(this.getNode(), 'Subscriber ID is required.', { itemIndex });
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'DELETE',
+							`/lists/${listId}/subscribers/${subscriberId}`,
+							{},
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+				}
+
+				if (resource === 'segment') {
+					const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+					if (!listId) {
+						throw new NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+					}
+
+					const parseSegmentJson = (): IDataObject => {
+						const rawValue = this.getNodeParameter('segmentDataJson', itemIndex, '') as unknown;
+						if (typeof rawValue === 'string') {
+							const trimmed = rawValue.trim();
+							if (trimmed.length === 0) {
+								return {};
+							}
+							try {
+								const parsed = JSON.parse(trimmed);
+								return isRecord(parsed) ? (parsed as IDataObject) : {};
+							} catch (error) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'Segment data JSON must be valid JSON.',
+									{ itemIndex },
+								);
+							}
+						}
+
+						if (isRecord(rawValue)) {
+							return rawValue as IDataObject;
+						}
+
+						return {};
+					};
+
+					const buildConditions = (): IDataObject[] => {
+						const raw = this.getNodeParameter('segmentConditions', itemIndex, {}) as IDataObject;
+						const records = Array.isArray(raw.condition) ? (raw.condition as IDataObject[]) : [];
+						return records
+							.map((entry) => {
+								const fieldId = asString(entry.fieldId)?.trim();
+								const operatorId = asString(entry.operatorId)?.trim();
+								const value = asString(entry.value) ?? ensureString(entry.value ?? '');
+								if (!fieldId || !operatorId) {
+									return null;
+								}
+								return {
+									field_id: fieldId,
+									operator_id: operatorId,
+									value,
+								} as IDataObject;
+							})
+							.filter((entry): entry is IDataObject => entry !== null);
+					};
+
+					const buildCampaignConditions = (): IDataObject[] => {
+						const raw = this.getNodeParameter('segmentCampaignConditions', itemIndex, {}) as IDataObject;
+						const records = Array.isArray(raw.condition) ? (raw.condition as IDataObject[]) : [];
+						return records
+							.map((entry) => {
+								const action = asString(entry.action)?.trim();
+								const campaignId = asString(entry.campaignId)?.trim();
+								const comparison = asString(entry.timeComparisonOperator)?.trim();
+								const timeValue = entry.timeValue;
+								const timeUnit = asString(entry.timeUnit)?.trim();
+
+								if (!action || !campaignId || !comparison || timeValue === undefined || !timeUnit) {
+									return null;
+								}
+
+								return {
+									action,
+									campaign_id: campaignId,
+									time_comparison_operator: comparison,
+									time_value: timeValue,
+									time_unit: timeUnit,
+								} as IDataObject;
+							})
+							.filter((entry): entry is IDataObject => entry !== null);
+					};
+
+					const buildSegmentPayload = (): IDataObject => {
+						const segmentName = ensureString(this.getNodeParameter('segmentName', itemIndex));
+						const matchOperator = ensureString(
+							this.getNodeParameter('segmentMatchOperator', itemIndex),
+						);
+
+						const payload: IDataObject = {
+							general: {
+								name: segmentName,
+								operator_match: matchOperator,
+							},
+						};
+
+						const conditions = buildConditions();
+						if (conditions.length > 0) {
+							payload.conditions = conditions;
+						}
+
+						const campaignConditions = buildCampaignConditions();
+						if (campaignConditions.length > 0) {
+							payload.campaign_conditions = campaignConditions;
+						}
+
+						const extraJson = parseSegmentJson();
+						if (Object.keys(extraJson).length > 0) {
+							const extraGeneral = isRecord(extraJson.general) ? (extraJson.general as IDataObject) : undefined;
+							if (extraGeneral) {
+								payload.general = {
+									...(isRecord(payload.general) ? (payload.general as IDataObject) : {}),
+									...extraGeneral,
+								};
+							}
+
+							if (Array.isArray(extraJson.conditions)) {
+								const additionalConditions = toRecordArray(extraJson.conditions as IDataObject[]);
+								if (additionalConditions.length > 0) {
+									const existing = Array.isArray(payload.conditions)
+										? (payload.conditions as IDataObject[])
+										: [];
+									payload.conditions = [...existing, ...additionalConditions];
+								}
+							}
+
+							if (Array.isArray(extraJson.campaign_conditions)) {
+								const additionalCampaignConditions = toRecordArray(
+									extraJson.campaign_conditions as IDataObject[],
+								);
+								if (additionalCampaignConditions.length > 0) {
+									const existing = Array.isArray(payload.campaign_conditions)
+										? (payload.campaign_conditions as IDataObject[])
+										: [];
+									payload.campaign_conditions = [...existing, ...additionalCampaignConditions];
+								}
+							}
+
+							for (const [key, value] of Object.entries(extraJson)) {
+								if (['general', 'conditions', 'campaign_conditions'].includes(key)) {
+									continue;
+								}
+								payload[key] = value;
+							}
+						}
+
+						return payload;
+					};
+
+					if (operation === 'create') {
+						const payload = buildSegmentPayload();
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'POST',
+							`/lists/${listId}/segments`,
+							{ data: payload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'get') {
+						const segmentId = ensureString(this.getNodeParameter('segmentId', itemIndex));
+						if (!segmentId) {
+							throw new NodeOperationError(this.getNode(), 'Segment ID is required.', { itemIndex });
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'GET',
+							`/lists/${listId}/segments/${segmentId}`,
+							{},
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'getAll') {
+						const pagination = this.getNodeParameter('pagination', itemIndex, {}) as IDataObject;
+						const page = Number(pagination.page ?? 1) || 1;
+						const perPage =
+							Number(pagination.perPage ?? DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'GET',
+							`/lists/${listId}/segments`,
+							{},
+							{ page, per_page: perPage },
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'update') {
+						const segmentId = ensureString(this.getNodeParameter('segmentId', itemIndex));
+						if (!segmentId) {
+							throw new NodeOperationError(this.getNode(), 'Segment ID is required.', { itemIndex });
+						}
+
+						const payload = buildSegmentPayload();
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'PUT',
+							`/lists/${listId}/segments/${segmentId}`,
+							{ data: payload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'delete') {
+						const segmentId = ensureString(this.getNodeParameter('segmentId', itemIndex));
+						if (!segmentId) {
+							throw new NodeOperationError(this.getNode(), 'Segment ID is required.', { itemIndex });
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'DELETE',
+							`/lists/${listId}/segments/${segmentId}`,
+							{},
 							{},
 							{},
 							itemIndex,

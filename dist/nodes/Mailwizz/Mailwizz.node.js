@@ -177,6 +177,10 @@ class Mailwizz {
                             value: 'subscriber',
                         },
                         {
+                            name: 'List Segment',
+                            value: 'segment',
+                        },
+                        {
                             name: 'Transactional Email',
                             value: 'transactionalEmail',
                         },
@@ -207,6 +211,24 @@ class Mailwizz {
                             value: 'get',
                             action: 'Get a campaign',
                             description: 'Retrieve a MailWizz campaign',
+                        },
+                        {
+                            name: 'Track Click',
+                            value: 'trackClick',
+                            action: 'Track a subscriber click',
+                            description: 'Track a subscriber click for a campaign URL',
+                        },
+                        {
+                            name: 'Track Open',
+                            value: 'trackOpen',
+                            action: 'Track a subscriber open',
+                            description: 'Track a subscriber open event for a campaign',
+                        },
+                        {
+                            name: 'Track Unsubscribe',
+                            value: 'trackUnsubscribe',
+                            action: 'Track a subscriber unsubscribe',
+                            description: 'Track a subscriber unsubscribe for a campaign',
                         },
                     ],
                     default: 'create',
@@ -287,13 +309,117 @@ class Mailwizz {
                     },
                     options: [
                         {
+                            name: 'Create',
+                            value: 'create',
+                            action: 'Create a subscriber',
+                            description: 'Create a subscriber inside a list',
+                        },
+                        {
                             name: 'Create Bulk',
                             value: 'createBulk',
                             action: 'Create subscribers in bulk',
                             description: 'Create multiple subscribers inside a list',
                         },
+                        {
+                            name: 'Delete',
+                            value: 'delete',
+                            action: 'Delete a subscriber',
+                            description: 'Delete a subscriber from a list',
+                        },
+                        {
+                            name: 'Get',
+                            value: 'get',
+                            action: 'Get a subscriber',
+                            description: 'Retrieve a subscriber by unique identifier',
+                        },
+                        {
+                            name: 'Get Confirmed',
+                            value: 'getConfirmed',
+                            action: 'Get confirmed subscribers',
+                            description: 'Retrieve confirmed subscribers from a list',
+                        },
+                        {
+                            name: 'Get Many',
+                            value: 'getAll',
+                            action: 'Get subscribers',
+                            description: 'Retrieve subscribers from a list',
+                        },
+                        {
+                            name: 'Get Unconfirmed',
+                            value: 'getUnconfirmed',
+                            action: 'Get unconfirmed subscribers',
+                            description: 'Retrieve unconfirmed subscribers from a list',
+                        },
+                        {
+                            name: 'Get Unsubscribed',
+                            value: 'getUnsubscribed',
+                            action: 'Get unsubscribed subscribers',
+                            description: 'Retrieve unsubscribed subscribers from a list',
+                        },
+                        {
+                            name: 'Unsubscribe by Email',
+                            value: 'unsubscribeByEmail',
+                            action: 'Unsubscribe a subscriber by email',
+                            description: 'Unsubscribe a subscriber by email address in a list',
+                        },
+                        {
+                            name: 'Update',
+                            value: 'update',
+                            action: 'Update a subscriber',
+                            description: 'Update a subscriber inside a list',
+                        },
+                        {
+                            name: 'Update by Email',
+                            value: 'updateByEmail',
+                            action: 'Update a subscriber by email',
+                            description: 'Update a subscriber identified by email address in a list',
+                        },
                     ],
-                    default: 'createBulk',
+                    default: 'getAll',
+                    noDataExpression: true,
+                },
+                {
+                    displayName: 'Operation',
+                    name: 'operation',
+                    type: 'options',
+                    displayOptions: {
+                        show: {
+                            resource: ['segment'],
+                        },
+                    },
+                    options: [
+                        {
+                            name: 'Create',
+                            value: 'create',
+                            action: 'Create a list segment',
+                            description: 'Create a segment inside a list',
+                        },
+                        {
+                            name: 'Delete',
+                            value: 'delete',
+                            action: 'Delete a list segment',
+                            description: 'Delete a segment from a list',
+                        },
+                        {
+                            name: 'Get',
+                            value: 'get',
+                            action: 'Get a list segment',
+                            description: 'Retrieve a segment from a list',
+                        },
+                        {
+                            name: 'Get Many',
+                            value: 'getAll',
+                            action: 'Get list segments',
+                            description: 'Retrieve segments from a list',
+                        },
+                        {
+                            name: 'Update',
+                            value: 'update',
+                            action: 'Update a list segment',
+                            description: 'Update a segment inside a list',
+                        },
+                    ],
+                    default: 'getAll',
                     noDataExpression: true,
                 },
                 {
@@ -412,7 +538,7 @@ class Mailwizz {
                     displayOptions: {
                         show: {
                             resource: ['campaign'],
-                            operation: ['get'],
+                            operation: ['get', 'trackClick', 'trackOpen', 'trackUnsubscribe'],
                         },
                     },
                     description: 'Unique identifier of the campaign in MailWizz',
@@ -456,6 +582,69 @@ class Mailwizz {
                             useWpSubject: [false],
                         },
                     },
+                },
+                {
+                    displayName: 'Subscriber ID',
+                    name: 'trackingSubscriberId',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['campaign'],
+                            operation: ['trackClick', 'trackOpen', 'trackUnsubscribe'],
+                        },
+                    },
+                    description: 'Subscriber unique identifier used for campaign tracking',
+                },
+                {
+                    displayName: 'URL Hash',
+                    name: 'trackingUrlHash',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['campaign'],
+                            operation: ['trackClick'],
+                        },
+                    },
+                    description: 'URL hash that identifies the tracked campaign link',
+                },
+                {
+                    displayName: 'Tracking Details',
+                    name: 'trackingDetails',
+                    type: 'collection',
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['campaign'],
+                            operation: ['trackUnsubscribe'],
+                        },
+                    },
+                    options: [
+                        {
+                            displayName: 'IP Address',
+                            name: 'ipAddress',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'Reason',
+                            name: 'reason',
+                            type: 'string',
+                            default: '',
+                            typeOptions: {
+                                rows: 2,
+                            },
+                        },
+                        {
+                            displayName: 'User Agent',
+                            name: 'userAgent',
+                            type: 'string',
+                            default: '',
+                        },
+                    ],
                 },
                 {
                     displayName: 'WordPress Subject Field',
@@ -716,7 +905,19 @@ class Mailwizz {
                     displayOptions: {
                         show: {
                             resource: ['subscriber'],
-                            operation: ['createBulk'],
+                            operation: [
+                                'create',
+                                'createBulk',
+                                'delete',
+                                'get',
+                                'getAll',
+                                'getConfirmed',
+                                'getUnconfirmed',
+                                'getUnsubscribed',
+                                'unsubscribeByEmail',
+                                'update',
+                                'updateByEmail',
+                            ],
                         },
                     },
                     description: 'Identifier of the list that the subscribers will be added to',
@@ -737,6 +938,138 @@ class Mailwizz {
                     },
                     required: true,
                     description: 'JSON array of subscriber objects to create in MailWizz',
+                },
+                {
+                    displayName: 'Subscriber ID',
+                    name: 'subscriberId',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['delete', 'get', 'update'],
+                        },
+                    },
+                    description: 'Unique identifier of the subscriber in MailWizz',
+                },
+                {
+                    displayName: 'Subscriber Email',
+                    name: 'subscriberEmail',
+                    type: 'string',
+                    required: true,
+                    default: '={{$json["EMAIL"]}}',
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['create', 'updateByEmail', 'unsubscribeByEmail'],
+                        },
+                    },
+                    description: 'Email address of the subscriber',
+                },
+                {
+                    displayName: 'New Subscriber Email',
+                    name: 'newSubscriberEmail',
+                    type: 'string',
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['update', 'updateByEmail'],
+                        },
+                    },
+                    description: 'Optional new email address for the subscriber',
+                },
+                {
+                    displayName: 'Subscriber Fields',
+                    name: 'subscriberFields',
+                    type: 'fixedCollection',
+                    typeOptions: {
+                        multipleValueButtonText: 'Add Field',
+                        multipleValues: true,
+                    },
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['create', 'update', 'updateByEmail'],
+                        },
+                    },
+                    options: [
+                        {
+                            displayName: 'Field',
+                            name: 'field',
+                            values: [
+                                {
+                                    displayName: 'Field Tag',
+                                    name: 'tag',
+                                    type: 'string',
+                                    required: true,
+                                    default: '',
+                                    placeholder: 'e.g. FNAME',
+                                },
+                                {
+                                    displayName: 'Value',
+                                    name: 'value',
+                                    type: 'string',
+                                    required: true,
+                                    default: '',
+                                },
+                            ],
+                        },
+                    ],
+                    description: 'Additional field tag/value pairs to include in the subscriber payload',
+                },
+                {
+                    displayName: 'Subscriber Data (JSON)',
+                    name: 'subscriberDataJson',
+                    type: 'json',
+                    typeOptions: {
+                        alwaysOpenEditWindow: true,
+                    },
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['create', 'update', 'updateByEmail'],
+                        },
+                    },
+                    description: 'Advanced JSON object containing MailWizz field tags as keys; merged with other subscriber fields',
+                },
+                {
+                    displayName: 'Unsubscribe Details',
+                    name: 'unsubscribeDetails',
+                    type: 'collection',
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['unsubscribeByEmail'],
+                        },
+                    },
+                    options: [
+                        {
+                            displayName: 'IP Address',
+                            name: 'ipAddress',
+                            type: 'string',
+                            default: '',
+                        },
+                        {
+                            displayName: 'Reason',
+                            name: 'reason',
+                            type: 'string',
+                            default: '',
+                            typeOptions: {
+                                rows: 2,
+                            },
+                        },
+                        {
+                            displayName: 'User Agent',
+                            name: 'userAgent',
+                            type: 'string',
+                            default: '',
+                        },
+                    ],
                 },
                 {
                     displayName: 'List ID',
@@ -1109,6 +1442,242 @@ class Mailwizz {
                     ],
                 },
                 {
+                    displayName: 'List ID',
+                    name: 'listId',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['segment'],
+                            operation: ['create', 'delete', 'get', 'getAll', 'update'],
+                        },
+                    },
+                    description: 'Identifier of the list that owns the segment',
+                },
+                {
+                    displayName: 'Segment ID',
+                    name: 'segmentId',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['segment'],
+                            operation: ['delete', 'get', 'update'],
+                        },
+                    },
+                    description: 'Unique identifier of the segment within the list',
+                },
+                {
+                    displayName: 'Segment Name',
+                    name: 'segmentName',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['segment'],
+                            operation: ['create', 'update'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Match Operator',
+                    name: 'segmentMatchOperator',
+                    type: 'options',
+                    options: [
+                        {
+                            name: 'Match All',
+                            value: 'all',
+                        },
+                        {
+                            name: 'Match Any',
+                            value: 'any',
+                        },
+                    ],
+                    required: true,
+                    default: 'all',
+                    displayOptions: {
+                        show: {
+                            resource: ['segment'],
+                            operation: ['create', 'update'],
+                        },
+                    },
+                    description: 'Whether subscribers must meet all conditions or any condition to join the segment',
+                },
+                {
+                    displayName: 'Conditions',
+                    name: 'segmentConditions',
+                    type: 'fixedCollection',
+                    typeOptions: {
+                        multipleValueButtonText: 'Add Condition',
+                        multipleValues: true,
+                    },
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['segment'],
+                            operation: ['create', 'update'],
+                        },
+                    },
+                    options: [
+                        {
+                            name: 'condition',
+                            displayName: 'Condition',
+                            values: [
+                                {
+                                    displayName: 'Field ID',
+                                    name: 'fieldId',
+                                    type: 'string',
+                                    required: true,
+                                    default: '',
+                                },
+                                {
+                                    displayName: 'Operator ID',
+                                    name: 'operatorId',
+                                    type: 'string',
+                                    required: true,
+                                    default: '',
+                                },
+                                {
+                                    displayName: 'Value',
+                                    name: 'value',
+                                    type: 'string',
+                                    required: true,
+                                    default: '',
+                                },
+                            ],
+                        },
+                    ],
+                    description: 'List field conditions that determine segment membership',
+                },
+                {
+                    displayName: 'Campaign Conditions',
+                    name: 'segmentCampaignConditions',
+                    type: 'fixedCollection',
+                    typeOptions: {
+                        multipleValueButtonText: 'Add Campaign Condition',
+                        multipleValues: true,
+                    },
+                    default: {},
+                    displayOptions: {
+                        show: {
+                            resource: ['segment'],
+                            operation: ['create', 'update'],
+                        },
+                    },
+                    options: [
+                        {
+                            name: 'condition',
+                            displayName: 'Condition',
+                            values: [
+                                {
+                                    displayName: 'Action',
+                                    name: 'action',
+                                    type: 'options',
+                                    options: [
+                                        {
+                                            name: 'Click',
+                                            value: 'click',
+                                        },
+                                        {
+                                            name: 'Open',
+                                            value: 'open',
+                                        },
+                                    ],
+                                    required: true,
+                                    default: 'click',
+                                },
+                                {
+                                    displayName: 'Campaign ID',
+                                    name: 'campaignId',
+                                    type: 'string',
+                                    required: true,
+                                    default: '',
+                                },
+                                {
+                                    displayName: 'Time Comparison Operator',
+                                    name: 'timeComparisonOperator',
+                                    type: 'options',
+                                    options: [
+                                        {
+                                            name: 'Equals',
+                                            value: 'eq',
+                                        },
+                                        {
+                                            name: 'Greater Than',
+                                            value: 'gt',
+                                        },
+                                        {
+                                            name: 'Greater Than Or Equals',
+                                            value: 'gte',
+                                        },
+                                        {
+                                            name: 'Less Than',
+                                            value: 'lt',
+                                        },
+                                        {
+                                            name: 'Less Than Or Equals',
+                                            value: 'lte',
+                                        },
+                                    ],
+                                    required: true,
+                                    default: 'gte',
+                                },
+                                {
+                                    displayName: 'Time Value',
+                                    name: 'timeValue',
+                                    type: 'number',
+                                    typeOptions: {
+                                        minValue: 1,
+                                    },
+                                    required: true,
+                                    default: 1,
+                                },
+                                {
+                                    displayName: 'Time Unit',
+                                    name: 'timeUnit',
+                                    type: 'options',
+                                    options: [
+                                        {
+                                            name: 'Day',
+                                            value: 'day',
+                                        },
+                                        {
+                                            name: 'Month',
+                                            value: 'month',
+                                        },
+                                        {
+                                            name: 'Year',
+                                            value: 'year',
+                                        },
+                                    ],
+                                    required: true,
+                                    default: 'day',
+                                },
+                            ],
+                        },
+                    ],
+                    description: 'Campaign activity conditions that refine segment membership',
+                },
+                {
+                    displayName: 'Segment Data (JSON)',
+                    name: 'segmentDataJson',
+                    type: 'json',
+                    typeOptions: {
+                        alwaysOpenEditWindow: true,
+                    },
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['segment'],
+                            operation: ['create', 'update'],
+                        },
+                    },
+                    description: 'Advanced JSON payload merged into the request data, allowing full control over segment creation',
+                },
+                {
                     displayName: 'Template ID',
                     name: 'templateId',
                     type: 'string',
@@ -1345,8 +1914,8 @@ class Mailwizz {
                     default: {},
                     displayOptions: {
                         show: {
-                            resource: ['list', 'template', 'transactionalEmail'],
-                            operation: ['getAll'],
+                            resource: ['list', 'template', 'transactionalEmail', 'subscriber', 'segment'],
+                            operation: ['getAll', 'getConfirmed', 'getUnconfirmed', 'getUnsubscribed'],
                         },
                     },
                     options: [
@@ -1479,7 +2048,7 @@ class Mailwizz {
         };
     }
     async execute() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50;
         const items = this.getInputData();
         const returnData = [];
         for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
@@ -1614,6 +2183,61 @@ class Mailwizz {
                     });
                     continue;
                 }
+                if (resource === 'campaign' && operation === 'trackClick') {
+                    const campaignId = ensureString(this.getNodeParameter('campaignId', itemIndex));
+                    const subscriberId = ensureString(this.getNodeParameter('trackingSubscriberId', itemIndex));
+                    const urlHash = ensureString(this.getNodeParameter('trackingUrlHash', itemIndex));
+                    if (!campaignId || !subscriberId || !urlHash) {
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Campaign ID, subscriber ID, and URL hash are required.', { itemIndex });
+                    }
+                    const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/campaigns/${campaignId}/track-url/${subscriberId}/${urlHash}`, {}, {}, {}, itemIndex);
+                    returnData.push({
+                        json: (_h = response) !== null && _h !== void 0 ? _h : {},
+                    });
+                    continue;
+                }
+                if (resource === 'campaign' && operation === 'trackOpen') {
+                    const campaignId = ensureString(this.getNodeParameter('campaignId', itemIndex));
+                    const subscriberId = ensureString(this.getNodeParameter('trackingSubscriberId', itemIndex));
+                    if (!campaignId || !subscriberId) {
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Campaign ID and subscriber ID are required.', {
+                            itemIndex,
+                        });
+                    }
+                    const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/campaigns/${campaignId}/track-opening/${subscriberId}`, {}, {}, {}, itemIndex);
+                    returnData.push({
+                        json: (_j = response) !== null && _j !== void 0 ? _j : {},
+                    });
+                    continue;
+                }
+                if (resource === 'campaign' && operation === 'trackUnsubscribe') {
+                    const campaignId = ensureString(this.getNodeParameter('campaignId', itemIndex));
+                    const subscriberId = ensureString(this.getNodeParameter('trackingSubscriberId', itemIndex));
+                    const trackingDetails = this.getNodeParameter('trackingDetails', itemIndex, {});
+                    if (!campaignId || !subscriberId) {
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Campaign ID and subscriber ID are required.', {
+                            itemIndex,
+                        });
+                    }
+                    const payload = {};
+                    const ipAddress = (_k = asString(trackingDetails.ipAddress)) === null || _k === void 0 ? void 0 : _k.trim();
+                    const userAgent = (_l = asString(trackingDetails.userAgent)) === null || _l === void 0 ? void 0 : _l.trim();
+                    const reason = (_m = asString(trackingDetails.reason)) === null || _m === void 0 ? void 0 : _m.trim();
+                    if (ipAddress) {
+                        payload.ip_address = ipAddress;
+                    }
+                    if (userAgent) {
+                        payload.user_agent = userAgent;
+                    }
+                    if (reason) {
+                        payload.reason = reason;
+                    }
+                    const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/campaigns/${campaignId}/track-unsubscribe/${subscriberId}`, Object.keys(payload).length > 0 ? { data: payload } : {}, {}, {}, itemIndex);
+                    returnData.push({
+                        json: (_o = response) !== null && _o !== void 0 ? _o : {},
+                    });
+                    continue;
+                }
                 if (resource === 'list') {
                     if (operation === 'create') {
                         const getRequiredString = (parameter, errorMessage) => {
@@ -1629,16 +2253,19 @@ class Mailwizz {
                         const fromEmail = getRequiredString('listFromEmail', 'Default from email is required.');
                         const fromName = getRequiredString('listFromName', 'Default from name is required.');
                         const replyTo = getRequiredString('listReplyTo', 'Default reply-to email is required.');
-                        const subject = (_j = (_h = asString(this.getNodeParameter('listSubject', itemIndex, ''))) === null || _h === void 0 ? void 0 : _h.trim()) !== null && _j !== void 0 ? _j : '';
+                        const subject = (_q = (_p = asString(this.getNodeParameter('listSubject', itemIndex, ''))) === null || _p === void 0 ? void 0 : _p.trim()) !== null && _q !== void 0 ? _q : '';
                         const companyName = getRequiredString('listCompanyName', 'Company name is required.');
                         const address1 = getRequiredString('listAddress1', 'Company address line 1 is required.');
                         const country = getRequiredString('listCountry', 'Company country is required.');
                         const city = getRequiredString('listCity', 'Company city is required.');
                         const zipCode = getRequiredString('listZip', 'Company ZIP is required.');
-                        const address2 = (_l = (_k = asString(this.getNodeParameter('listAddress2', itemIndex, ''))) === null || _k === void 0 ? void 0 : _k.trim()) !== null && _l !== void 0 ? _l : '';
-                        const state = (_o = (_m = asString(this.getNodeParameter('listState', itemIndex, ''))) === null || _m === void 0 ? void 0 : _m.trim()) !== null && _o !== void 0 ? _o : '';
-                        const zoneName = (_q = (_p = asString(this.getNodeParameter('listZoneName', itemIndex, ''))) === null || _p === void 0 ? void 0 : _p.trim()) !== null && _q !== void 0 ? _q : '';
-                        const phone = (_s = (_r = asString(this.getNodeParameter('listPhone', itemIndex, ''))) === null || _r === void 0 ? void 0 : _r.trim()) !== null && _s !== void 0 ? _s : '';
+                        const address2 = (_s = (_r = asString(this.getNodeParameter('listAddress2', itemIndex, ''))) === null || _r === void 0 ? void 0 : _r.trim()) !== null && _s !== void 0 ? _s : '';
+                        const state = (_u = (_t = asString(this.getNodeParameter('listState', itemIndex, ''))) === null || _t === void 0 ? void 0 : _t.trim()) !== null && _u !== void 0 ? _u : '';
+                        const zoneName = (_w = (_v = asString(this.getNodeParameter('listZoneName', itemIndex, ''))) === null || _v === void 0 ? void 0 : _v.trim()) !== null && _w !== void 0 ? _w : '';
+                        const phone = (_y = (_x = asString(this.getNodeParameter('listPhone', itemIndex, ''))) === null || _x === void 0 ? void 0 : _x.trim()) !== null && _y !== void 0 ? _y : '';
+                        if (!state && !zoneName) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide either the company state or the company zone name.', { itemIndex });
+                        }
                         const options = this.getNodeParameter('listOptions', itemIndex, {});
                         const notifications = this.getNodeParameter('listNotifications', itemIndex, {});
                         const defaultsPayload = {
@@ -1653,10 +2280,12 @@ class Mailwizz {
                             name: companyName,
                             address_1: address1,
                             country,
-                            zone: state,
                         };
                         if (address2) {
                             companyPayload.address_2 = address2;
+                        }
+                        if (state) {
+                            companyPayload.zone = state;
                         }
                         if (zoneName) {
                             companyPayload.zone_name = zoneName;
@@ -1679,47 +2308,47 @@ class Mailwizz {
                             company: companyPayload,
                         };
                         const optionPayload = {};
-                        const subscribeSubject = (_t = asString(options.subject)) === null || _t === void 0 ? void 0 : _t.trim();
+                        const subscribeSubject = (_z = asString(options.subject)) === null || _z === void 0 ? void 0 : _z.trim();
                         if (subscribeSubject)
                             optionPayload.email_subscribe_subject = subscribeSubject;
-                        const subscribeFromName = (_u = asString(options.fromName)) === null || _u === void 0 ? void 0 : _u.trim();
+                        const subscribeFromName = (_0 = asString(options.fromName)) === null || _0 === void 0 ? void 0 : _0.trim();
                         if (subscribeFromName)
                             optionPayload.email_subscribe_from_name = subscribeFromName;
-                        const subscribeFromEmail = (_v = asString(options.fromEmail)) === null || _v === void 0 ? void 0 : _v.trim();
+                        const subscribeFromEmail = (_1 = asString(options.fromEmail)) === null || _1 === void 0 ? void 0 : _1.trim();
                         if (subscribeFromEmail)
                             optionPayload.email_subscribe_from_email = subscribeFromEmail;
-                        const subscribeReplyTo = (_w = asString(options.replyTo)) === null || _w === void 0 ? void 0 : _w.trim();
+                        const subscribeReplyTo = (_2 = asString(options.replyTo)) === null || _2 === void 0 ? void 0 : _2.trim();
                         if (subscribeReplyTo)
                             optionPayload.email_subscribe_reply_to = subscribeReplyTo;
-                        const welcomeSubject = (_x = asString(options.welcomeSubject)) === null || _x === void 0 ? void 0 : _x.trim();
+                        const welcomeSubject = (_3 = asString(options.welcomeSubject)) === null || _3 === void 0 ? void 0 : _3.trim();
                         if (welcomeSubject)
                             optionPayload.email_welcome_subject = welcomeSubject;
-                        const sendWelcome = (_y = asString(options.sendWelcome)) === null || _y === void 0 ? void 0 : _y.trim();
+                        const sendWelcome = (_4 = asString(options.sendWelcome)) === null || _4 === void 0 ? void 0 : _4.trim();
                         if (sendWelcome)
                             optionPayload.send_welcome_email = sendWelcome;
-                        const sendConfirmation = (_z = asString(options.sendConfirmation)) === null || _z === void 0 ? void 0 : _z.trim();
+                        const sendConfirmation = (_5 = asString(options.sendConfirmation)) === null || _5 === void 0 ? void 0 : _5.trim();
                         if (sendConfirmation)
                             optionPayload.send_subscribe_confirmation = sendConfirmation;
                         if (Object.keys(optionPayload).length > 0) {
                             listPayload.options = optionPayload;
                         }
                         const notificationPayload = {};
-                        const subscribeFlag = (_0 = asString(notifications.subscribe)) === null || _0 === void 0 ? void 0 : _0.trim();
+                        const subscribeFlag = (_6 = asString(notifications.subscribe)) === null || _6 === void 0 ? void 0 : _6.trim();
                         if (subscribeFlag)
                             notificationPayload.subscribe = subscribeFlag;
-                        const subscribeTarget = (_1 = asString(notifications.subscribeTo)) === null || _1 === void 0 ? void 0 : _1.trim();
+                        const subscribeTarget = (_7 = asString(notifications.subscribeTo)) === null || _7 === void 0 ? void 0 : _7.trim();
                         if (subscribeTarget)
                             notificationPayload.subscribe_to = subscribeTarget;
-                        const unsubscribeFlag = (_2 = asString(notifications.unsubscribe)) === null || _2 === void 0 ? void 0 : _2.trim();
+                        const unsubscribeFlag = (_8 = asString(notifications.unsubscribe)) === null || _8 === void 0 ? void 0 : _8.trim();
                         if (unsubscribeFlag)
                             notificationPayload.unsubscribe = unsubscribeFlag;
-                        const unsubscribeTarget = (_3 = asString(notifications.unsubscribeTo)) === null || _3 === void 0 ? void 0 : _3.trim();
+                        const unsubscribeTarget = (_9 = asString(notifications.unsubscribeTo)) === null || _9 === void 0 ? void 0 : _9.trim();
                         if (unsubscribeTarget)
                             notificationPayload.unsubscribe_to = unsubscribeTarget;
-                        const dailyFlag = (_4 = asString(notifications.daily)) === null || _4 === void 0 ? void 0 : _4.trim();
+                        const dailyFlag = (_10 = asString(notifications.daily)) === null || _10 === void 0 ? void 0 : _10.trim();
                         if (dailyFlag)
                             notificationPayload.daily = dailyFlag;
-                        const dailyTarget = (_5 = asString(notifications.dailyTo)) === null || _5 === void 0 ? void 0 : _5.trim();
+                        const dailyTarget = (_11 = asString(notifications.dailyTo)) === null || _11 === void 0 ? void 0 : _11.trim();
                         if (dailyTarget)
                             notificationPayload.daily_to = dailyTarget;
                         if (Object.keys(notificationPayload).length > 0) {
@@ -1727,7 +2356,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/lists', { list: listPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_6 = response) !== null && _6 !== void 0 ? _6 : {},
+                            json: (_12 = response) !== null && _12 !== void 0 ? _12 : {},
                         });
                         continue;
                     }
@@ -1738,27 +2367,87 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_7 = response) !== null && _7 !== void 0 ? _7 : {},
+                            json: (_13 = response) !== null && _13 !== void 0 ? _13 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_8 = pagination.page) !== null && _8 !== void 0 ? _8 : 1) || 1;
-                        const perPage = Number((_9 = pagination.perPage) !== null && _9 !== void 0 ? _9 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_14 = pagination.page) !== null && _14 !== void 0 ? _14 : 1) || 1;
+                        const perPage = Number((_15 = pagination.perPage) !== null && _15 !== void 0 ? _15 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/lists', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_10 = response) !== null && _10 !== void 0 ? _10 : {},
+                            json: (_16 = response) !== null && _16 !== void 0 ? _16 : {},
                         });
                         continue;
                     }
                 }
                 if (resource === 'subscriber') {
-                    if (operation === 'createBulk') {
-                        const listId = ensureString(this.getNodeParameter('listId', itemIndex));
-                        if (!listId) {
-                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+                    const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+                    if (!listId) {
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+                    }
+                    const parseJsonParameter = (parameterName) => {
+                        const rawValue = this.getNodeParameter(parameterName, itemIndex, '');
+                        if (typeof rawValue === 'string') {
+                            const trimmed = rawValue.trim();
+                            if (trimmed.length === 0) {
+                                return {};
+                            }
+                            try {
+                                const parsed = JSON.parse(trimmed);
+                                return isRecord(parsed) ? parsed : {};
+                            }
+                            catch (error) {
+                                throw new n8n_workflow_1.NodeOperationError(this.getNode(), `Parameter "${parameterName}" must be valid JSON.`, { itemIndex });
+                            }
                         }
+                        if (isRecord(rawValue)) {
+                            return rawValue;
+                        }
+                        return {};
+                    };
+                    const collectFieldPairs = () => {
+                        var _a;
+                        const rawFields = this.getNodeParameter('subscriberFields', itemIndex, {});
+                        const records = Array.isArray(rawFields.field) ? rawFields.field : [];
+                        const fieldData = {};
+                        for (const entry of records) {
+                            const tag = (_a = asString(entry.tag)) === null || _a === void 0 ? void 0 : _a.trim();
+                            if (!tag) {
+                                continue;
+                            }
+                            fieldData[tag.toUpperCase()] = entry.value;
+                        }
+                        return fieldData;
+                    };
+                    const buildSubscriberData = (baseEmail, overrideEmail) => {
+                        const data = {};
+                        const jsonData = parseJsonParameter('subscriberDataJson');
+                        for (const [key, value] of Object.entries(jsonData)) {
+                            data[key] = value;
+                        }
+                        const fieldPairs = collectFieldPairs();
+                        for (const [key, value] of Object.entries(fieldPairs)) {
+                            data[key] = value;
+                        }
+                        if (baseEmail) {
+                            data.EMAIL = baseEmail;
+                        }
+                        if (overrideEmail) {
+                            data.EMAIL = overrideEmail;
+                        }
+                        return data;
+                    };
+                    const findSubscriberByEmail = async (email) => {
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/subscribers/search-by-email`, {}, { EMAIL: email }, {}, itemIndex);
+                        const record = getFirstRecord(response);
+                        if (!isRecord(record)) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), `Subscriber with email "${email}" was not found in the list.`, { itemIndex });
+                        }
+                        return record;
+                    };
+                    if (operation === 'createBulk') {
                         const rawSubscribers = this.getNodeParameter('subscribers', itemIndex);
                         const resolveSubscribers = (value) => {
                             if (typeof value === 'string') {
@@ -1791,7 +2480,311 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers/bulk`, { subscribers: subscribersPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_11 = response) !== null && _11 !== void 0 ? _11 : {},
+                            json: (_17 = response) !== null && _17 !== void 0 ? _17 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'create') {
+                        const subscriberEmail = ensureString(this.getNodeParameter('subscriberEmail', itemIndex)).trim();
+                        if (!subscriberEmail) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
+                        }
+                        const payload = buildSubscriberData(subscriberEmail);
+                        if (!asString(payload.EMAIL)) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber email is required.', {
+                                itemIndex,
+                            });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers`, { data: payload }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_18 = response) !== null && _18 !== void 0 ? _18 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'get') {
+                        const subscriberId = ensureString(this.getNodeParameter('subscriberId', itemIndex));
+                        if (!subscriberId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber ID is required.', { itemIndex });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/subscribers/${subscriberId}`, {}, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_19 = response) !== null && _19 !== void 0 ? _19 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'getAll' || operation === 'getConfirmed' || operation === 'getUnconfirmed' || operation === 'getUnsubscribed') {
+                        const pagination = this.getNodeParameter('pagination', itemIndex, {});
+                        const page = Number((_20 = pagination.page) !== null && _20 !== void 0 ? _20 : 1) || 1;
+                        const perPage = Number((_21 = pagination.perPage) !== null && _21 !== void 0 ? _21 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const query = {
+                            page,
+                            per_page: perPage,
+                        };
+                        if (operation === 'getConfirmed') {
+                            query.status = 'confirmed';
+                        }
+                        else if (operation === 'getUnconfirmed') {
+                            query.status = 'unconfirmed';
+                        }
+                        else if (operation === 'getUnsubscribed') {
+                            query.status = 'unsubscribed';
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/subscribers`, {}, query, {}, itemIndex);
+                        returnData.push({
+                            json: (_22 = response) !== null && _22 !== void 0 ? _22 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'update') {
+                        const subscriberId = ensureString(this.getNodeParameter('subscriberId', itemIndex));
+                        if (!subscriberId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber ID is required.', { itemIndex });
+                        }
+                        const newEmail = (_23 = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))) === null || _23 === void 0 ? void 0 : _23.trim();
+                        const payload = buildSubscriberData(undefined, newEmail);
+                        if (Object.keys(payload).length === 0) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide at least one field to update for the subscriber.', { itemIndex });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'PUT', `/lists/${listId}/subscribers/${subscriberId}`, { data: payload }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_24 = response) !== null && _24 !== void 0 ? _24 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'updateByEmail') {
+                        const subscriberEmail = ensureString(this.getNodeParameter('subscriberEmail', itemIndex)).trim();
+                        if (!subscriberEmail) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
+                        }
+                        const record = await findSubscriberByEmail(subscriberEmail);
+                        const subscriberUid = (_25 = asString(record.subscriber_uid)) !== null && _25 !== void 0 ? _25 : asString(record.uid);
+                        if (!subscriberUid) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Unable to resolve subscriber unique identifier.', { itemIndex });
+                        }
+                        const newEmail = (_26 = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))) === null || _26 === void 0 ? void 0 : _26.trim();
+                        const payload = buildSubscriberData(undefined, newEmail);
+                        if (Object.keys(payload).length === 0) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide at least one field to update for the subscriber.', { itemIndex });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'PUT', `/lists/${listId}/subscribers/${subscriberUid}`, { data: payload }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_27 = response) !== null && _27 !== void 0 ? _27 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'unsubscribeByEmail') {
+                        const subscriberEmail = ensureString(this.getNodeParameter('subscriberEmail', itemIndex)).trim();
+                        if (!subscriberEmail) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
+                        }
+                        const record = await findSubscriberByEmail(subscriberEmail);
+                        const subscriberUid = (_28 = asString(record.subscriber_uid)) !== null && _28 !== void 0 ? _28 : asString(record.uid);
+                        if (!subscriberUid) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Unable to resolve subscriber unique identifier.', { itemIndex });
+                        }
+                        const details = this.getNodeParameter('unsubscribeDetails', itemIndex, {});
+                        const payload = {};
+                        const ipAddress = (_29 = asString(details.ipAddress)) === null || _29 === void 0 ? void 0 : _29.trim();
+                        const userAgent = (_30 = asString(details.userAgent)) === null || _30 === void 0 ? void 0 : _30.trim();
+                        const reason = (_31 = asString(details.reason)) === null || _31 === void 0 ? void 0 : _31.trim();
+                        if (ipAddress) {
+                            payload.ip_address = ipAddress;
+                        }
+                        if (userAgent) {
+                            payload.user_agent = userAgent;
+                        }
+                        if (reason) {
+                            payload.reason = reason;
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'PUT', `/lists/${listId}/subscribers/${subscriberUid}/unsubscribe`, Object.keys(payload).length > 0 ? { data: payload } : {}, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_32 = response) !== null && _32 !== void 0 ? _32 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'delete') {
+                        const subscriberId = ensureString(this.getNodeParameter('subscriberId', itemIndex));
+                        if (!subscriberId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber ID is required.', { itemIndex });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'DELETE', `/lists/${listId}/subscribers/${subscriberId}`, {}, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_33 = response) !== null && _33 !== void 0 ? _33 : {},
+                        });
+                        continue;
+                    }
+                }
+                if (resource === 'segment') {
+                    const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+                    if (!listId) {
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+                    }
+                    const parseSegmentJson = () => {
+                        const rawValue = this.getNodeParameter('segmentDataJson', itemIndex, '');
+                        if (typeof rawValue === 'string') {
+                            const trimmed = rawValue.trim();
+                            if (trimmed.length === 0) {
+                                return {};
+                            }
+                            try {
+                                const parsed = JSON.parse(trimmed);
+                                return isRecord(parsed) ? parsed : {};
+                            }
+                            catch (error) {
+                                throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Segment data JSON must be valid JSON.', { itemIndex });
+                            }
+                        }
+                        if (isRecord(rawValue)) {
+                            return rawValue;
+                        }
+                        return {};
+                    };
+                    const buildConditions = () => {
+                        const raw = this.getNodeParameter('segmentConditions', itemIndex, {});
+                        const records = Array.isArray(raw.condition) ? raw.condition : [];
+                        return records
+                            .map((entry) => {
+                            var _a, _b, _c, _d;
+                            const fieldId = (_a = asString(entry.fieldId)) === null || _a === void 0 ? void 0 : _a.trim();
+                            const operatorId = (_b = asString(entry.operatorId)) === null || _b === void 0 ? void 0 : _b.trim();
+                            const value = (_c = asString(entry.value)) !== null && _c !== void 0 ? _c : ensureString((_d = entry.value) !== null && _d !== void 0 ? _d : '');
+                            if (!fieldId || !operatorId) {
+                                return null;
+                            }
+                            return {
+                                field_id: fieldId,
+                                operator_id: operatorId,
+                                value,
+                            };
+                        })
+                            .filter((entry) => entry !== null);
+                    };
+                    const buildCampaignConditions = () => {
+                        const raw = this.getNodeParameter('segmentCampaignConditions', itemIndex, {});
+                        const records = Array.isArray(raw.condition) ? raw.condition : [];
+                        return records
+                            .map((entry) => {
+                            var _a, _b, _c, _d;
+                            const action = (_a = asString(entry.action)) === null || _a === void 0 ? void 0 : _a.trim();
+                            const campaignId = (_b = asString(entry.campaignId)) === null || _b === void 0 ? void 0 : _b.trim();
+                            const comparison = (_c = asString(entry.timeComparisonOperator)) === null || _c === void 0 ? void 0 : _c.trim();
+                            const timeValue = entry.timeValue;
+                            const timeUnit = (_d = asString(entry.timeUnit)) === null || _d === void 0 ? void 0 : _d.trim();
+                            if (!action || !campaignId || !comparison || timeValue === undefined || !timeUnit) {
+                                return null;
+                            }
+                            return {
+                                action,
+                                campaign_id: campaignId,
+                                time_comparison_operator: comparison,
+                                time_value: timeValue,
+                                time_unit: timeUnit,
+                            };
+                        })
+                            .filter((entry) => entry !== null);
+                    };
+                    const buildSegmentPayload = () => {
+                        const segmentName = ensureString(this.getNodeParameter('segmentName', itemIndex));
+                        const matchOperator = ensureString(this.getNodeParameter('segmentMatchOperator', itemIndex));
+                        const payload = {
+                            general: {
+                                name: segmentName,
+                                operator_match: matchOperator,
+                            },
+                        };
+                        const conditions = buildConditions();
+                        if (conditions.length > 0) {
+                            payload.conditions = conditions;
+                        }
+                        const campaignConditions = buildCampaignConditions();
+                        if (campaignConditions.length > 0) {
+                            payload.campaign_conditions = campaignConditions;
+                        }
+                        const extraJson = parseSegmentJson();
+                        if (Object.keys(extraJson).length > 0) {
+                            const extraGeneral = isRecord(extraJson.general) ? extraJson.general : undefined;
+                            if (extraGeneral) {
+                                payload.general = {
+                                    ...(isRecord(payload.general) ? payload.general : {}),
+                                    ...extraGeneral,
+                                };
+                            }
+                            if (Array.isArray(extraJson.conditions)) {
+                                const additionalConditions = toRecordArray(extraJson.conditions);
+                                if (additionalConditions.length > 0) {
+                                    const existing = Array.isArray(payload.conditions)
+                                        ? payload.conditions
+                                        : [];
+                                    payload.conditions = [...existing, ...additionalConditions];
+                                }
+                            }
+                            if (Array.isArray(extraJson.campaign_conditions)) {
+                                const additionalCampaignConditions = toRecordArray(extraJson.campaign_conditions);
+                                if (additionalCampaignConditions.length > 0) {
+                                    const existing = Array.isArray(payload.campaign_conditions)
+                                        ? payload.campaign_conditions
+                                        : [];
+                                    payload.campaign_conditions = [...existing, ...additionalCampaignConditions];
+                                }
+                            }
+                            for (const [key, value] of Object.entries(extraJson)) {
+                                if (['general', 'conditions', 'campaign_conditions'].includes(key)) {
+                                    continue;
+                                }
+                                payload[key] = value;
+                            }
+                        }
+                        return payload;
+                    };
+                    if (operation === 'create') {
+                        const payload = buildSegmentPayload();
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/segments`, { data: payload }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_34 = response) !== null && _34 !== void 0 ? _34 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'get') {
+                        const segmentId = ensureString(this.getNodeParameter('segmentId', itemIndex));
+                        if (!segmentId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Segment ID is required.', { itemIndex });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/segments/${segmentId}`, {}, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_35 = response) !== null && _35 !== void 0 ? _35 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'getAll') {
+                        const pagination = this.getNodeParameter('pagination', itemIndex, {});
+                        const page = Number((_36 = pagination.page) !== null && _36 !== void 0 ? _36 : 1) || 1;
+                        const perPage = Number((_37 = pagination.perPage) !== null && _37 !== void 0 ? _37 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/segments`, {}, { page, per_page: perPage }, {}, itemIndex);
+                        returnData.push({
+                            json: (_38 = response) !== null && _38 !== void 0 ? _38 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'update') {
+                        const segmentId = ensureString(this.getNodeParameter('segmentId', itemIndex));
+                        if (!segmentId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Segment ID is required.', { itemIndex });
+                        }
+                        const payload = buildSegmentPayload();
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'PUT', `/lists/${listId}/segments/${segmentId}`, { data: payload }, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_39 = response) !== null && _39 !== void 0 ? _39 : {},
+                        });
+                        continue;
+                    }
+                    if (operation === 'delete') {
+                        const segmentId = ensureString(this.getNodeParameter('segmentId', itemIndex));
+                        if (!segmentId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Segment ID is required.', { itemIndex });
+                        }
+                        const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'DELETE', `/lists/${listId}/segments/${segmentId}`, {}, {}, {}, itemIndex);
+                        returnData.push({
+                            json: (_40 = response) !== null && _40 !== void 0 ? _40 : {},
                         });
                         continue;
                     }
@@ -1824,7 +2817,7 @@ class Mailwizz {
                             template: templatePayload,
                         }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_12 = response) !== null && _12 !== void 0 ? _12 : {},
+                            json: (_41 = response) !== null && _41 !== void 0 ? _41 : {},
                         });
                         continue;
                     }
@@ -1835,17 +2828,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_13 = response) !== null && _13 !== void 0 ? _13 : {},
+                            json: (_42 = response) !== null && _42 !== void 0 ? _42 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_14 = pagination.page) !== null && _14 !== void 0 ? _14 : 1) || 1;
-                        const perPage = Number((_15 = pagination.perPage) !== null && _15 !== void 0 ? _15 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_43 = pagination.page) !== null && _43 !== void 0 ? _43 : 1) || 1;
+                        const perPage = Number((_44 = pagination.perPage) !== null && _44 !== void 0 ? _44 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/templates', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_16 = response) !== null && _16 !== void 0 ? _16 : {},
+                            json: (_45 = response) !== null && _45 !== void 0 ? _45 : {},
                         });
                         continue;
                     }
@@ -1890,7 +2883,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/transactional-emails', { transactional_email: transactionalPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_17 = response) !== null && _17 !== void 0 ? _17 : {},
+                            json: (_46 = response) !== null && _46 !== void 0 ? _46 : {},
                         });
                         continue;
                     }
@@ -1903,17 +2896,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/transactional-emails/${emailId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_18 = response) !== null && _18 !== void 0 ? _18 : {},
+                            json: (_47 = response) !== null && _47 !== void 0 ? _47 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_19 = pagination.page) !== null && _19 !== void 0 ? _19 : 1) || 1;
-                        const perPage = Number((_20 = pagination.perPage) !== null && _20 !== void 0 ? _20 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_48 = pagination.page) !== null && _48 !== void 0 ? _48 : 1) || 1;
+                        const perPage = Number((_49 = pagination.perPage) !== null && _49 !== void 0 ? _49 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/transactional-emails', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_21 = response) !== null && _21 !== void 0 ? _21 : {},
+                            json: (_50 = response) !== null && _50 !== void 0 ? _50 : {},
                         });
                         continue;
                     }
