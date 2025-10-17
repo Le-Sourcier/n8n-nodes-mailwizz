@@ -10,7 +10,7 @@ This package provides a modern integration between n8n and self-hosted MailWizz 
 - **Campaign Tracking** - Record subscriber click, open, or unsubscribe events directly from n8n
 - **Category Mapping** - Map WordPress categories to MailWizz lists and segments
 - **Template Management** - Create new templates or fetch existing ones with optional content injection
-- **List Management** - Create lists with company defaults, options, and notifications that match the API schema
+- **List Management** - Create, update, copy, or delete lists with company defaults, options, and notifications that match the API schema
 - **Subscriber Management** - Create, update, delete, or unsubscribe list members (individually, in bulk, or by email lookup)
 - **Segment Management** - Create, update, retrieve, or delete list segments with advanced list/campaign conditions
 - **Transactional Emails** - Send, list, or inspect transactional emails from your workflows

@@ -321,6 +321,24 @@ export class Mailwizz implements INodeType {
 						action: 'Get lists',
 						description: 'Retrieve multiple MailWizz lists',
 					},
+					{
+						name: 'Update',
+						value: 'update',
+						action: 'Update a list',
+						description: 'Update an existing MailWizz list',
+					},
+					{
+						name: 'Copy',
+						value: 'copy',
+						action: 'Copy a list',
+						description: 'Copy a MailWizz list to a new list',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						action: 'Delete a list',
+						description: 'Delete a MailWizz list',
+					},
 				],
 				default: 'getAll',
 				noDataExpression: true,
@@ -1140,7 +1158,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['get'],
+						operation: ['get', 'update', 'copy', 'delete'],
 					},
 				},
 			},
@@ -1153,7 +1171,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1169,7 +1187,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1182,7 +1200,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1195,7 +1213,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1208,7 +1226,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1220,7 +1238,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 				description: 'Optional default subject used for list emails',
@@ -1234,7 +1252,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1247,7 +1265,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1259,7 +1277,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1272,7 +1290,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1284,7 +1302,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1296,7 +1314,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 				description: 'Provide only when the selected country does not use predefined zones',
@@ -1310,7 +1328,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1323,7 +1341,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1335,7 +1353,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 			},
@@ -1347,7 +1365,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 				options: [
@@ -1423,7 +1441,7 @@ export class Mailwizz implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['list'],
-						operation: ['create'],
+						operation: ['create', 'update'],
 					},
 				},
 				options: [
@@ -1500,6 +1518,33 @@ export class Mailwizz implements INodeType {
 						description: 'Email address that receives the daily summary',
 					},
 				],
+			},
+			{
+				displayName: 'New List Name',
+				name: 'copyListName',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['copy'],
+					},
+				},
+				description: 'Name of the list that will be created from the copy operation',
+			},
+			{
+				displayName: 'New List Description',
+				name: 'copyListDescription',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['copy'],
+					},
+				},
+				description: 'Optional description for the newly copied list',
 			},
 			{
 				displayName: 'List ID',
@@ -2426,7 +2471,7 @@ export class Mailwizz implements INodeType {
 				}
 
 				if (resource === 'list') {
-					if (operation === 'create') {
+					const buildListPayload = () => {
 						const getRequiredString = (parameter: string, errorMessage: string): string => {
 							const value = ensureString(this.getNodeParameter(parameter, itemIndex));
 							const trimmed = value.trim();
@@ -2551,6 +2596,12 @@ export class Mailwizz implements INodeType {
 							listPayload.notifications = notificationPayload;
 						}
 
+						return listPayload;
+					};
+
+					if (operation === 'create') {
+						const listPayload = buildListPayload();
+
 						const response = await mailwizzApiRequest.call(
 							this,
 							'POST',
@@ -2601,6 +2652,91 @@ export class Mailwizz implements INodeType {
 							'/lists',
 							{},
 							{ page, per_page: perPage },
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'update') {
+						const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+						if (!listId) {
+							throw new NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+						}
+
+						const listPayload = buildListPayload();
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'PUT',
+							`/lists/${listId}`,
+							{ list: listPayload },
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'copy') {
+						const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+						if (!listId) {
+							throw new NodeOperationError(this.getNode(), 'Source list ID is required.', { itemIndex });
+						}
+
+						const name = ensureString(this.getNodeParameter('copyListName', itemIndex)).trim();
+						if (!name) {
+							throw new NodeOperationError(this.getNode(), 'New list name is required.', { itemIndex });
+						}
+
+						const description = asString(this.getNodeParameter('copyListDescription', itemIndex, ''))?.trim();
+
+						const payload: IDataObject = {
+							copy: {
+								name,
+							},
+						};
+
+						if (description) {
+							(payload.copy as IDataObject).description = description;
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'POST',
+							`/lists/${listId}/copy`,
+							payload,
+							{},
+							{},
+							itemIndex,
+						);
+
+						returnData.push({
+							json: (response as IDataObject) ?? {},
+						});
+						continue;
+					}
+
+					if (operation === 'delete') {
+						const listId = ensureString(this.getNodeParameter('listId', itemIndex));
+						if (!listId) {
+							throw new NodeOperationError(this.getNode(), 'List ID is required.', { itemIndex });
+						}
+
+						const response = await mailwizzApiRequest.call(
+							this,
+							'DELETE',
+							`/lists/${listId}`,
+							{},
+							{},
 							{},
 							itemIndex,
 						);
