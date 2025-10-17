@@ -879,6 +879,19 @@ export class Mailwizz implements INodeType {
 				},
 			},
 			{
+				displayName: 'Default Subject',
+				name: 'listSubject',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+				description: 'Optional default subject used for list emails',
+			},
+			{
 				displayName: 'Company Name',
 				name: 'listCompanyName',
 				type: 'string',
@@ -940,6 +953,19 @@ export class Mailwizz implements INodeType {
 						operation: ['create'],
 					},
 				},
+			},
+			{
+				displayName: 'Company Zone Name',
+				name: 'listZoneName',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['list'],
+						operation: ['create'],
+					},
+				},
+				description: 'Provide only when the selected country does not use predefined zones',
 			},
 			{
 				displayName: 'Company City',
@@ -1068,25 +1094,76 @@ export class Mailwizz implements INodeType {
 				},
 				options: [
 					{
-						displayName: 'Subscriber Notifications',
+						displayName: 'Notify on Subscribe',
 						name: 'subscribe',
-						type: 'string',
-						default: '',
-						description: 'Email address to notify on new subscriber',
+						type: 'options',
+						options: [
+							{
+								name: 'No',
+								value: 'no',
+							},
+							{
+								name: 'Yes',
+								value: 'yes',
+							},
+						],
+						default: 'no',
+						description: 'Send a notification when a subscriber joins the list',
 					},
 					{
-						displayName: 'Unsubscriber Notifications',
+						displayName: 'Subscribe Notification Email',
+						name: 'subscribeTo',
+						type: 'string',
+						default: '',
+						description: 'Email address that receives subscribe notifications',
+					},
+					{
+						displayName: 'Notify on Unsubscribe',
 						name: 'unsubscribe',
-						type: 'string',
-						default: '',
-						description: 'Email address to notify on unsubscribe',
+						type: 'options',
+						options: [
+							{
+								name: 'No',
+								value: 'no',
+							},
+							{
+								name: 'Yes',
+								value: 'yes',
+							},
+						],
+						default: 'no',
+						description: 'Send a notification when a subscriber leaves the list',
 					},
 					{
-						displayName: 'Daily Summary',
-						name: 'daily',
+						displayName: 'Unsubscribe Notification Email',
+						name: 'unsubscribeTo',
 						type: 'string',
 						default: '',
-						description: 'Email address to receive daily summary',
+						description: 'Email address that receives unsubscribe notifications',
+					},
+					{
+						displayName: 'Send Daily Summary',
+						name: 'daily',
+						type: 'options',
+						options: [
+							{
+								name: 'No',
+								value: 'no',
+							},
+							{
+								name: 'Yes',
+								value: 'yes',
+							},
+						],
+						default: 'no',
+						description: 'Send a daily activity summary email',
+					},
+					{
+						displayName: 'Daily Summary Email',
+						name: 'dailyTo',
+						type: 'string',
+						default: '',
+						description: 'Email address that receives the daily summary',
 					},
 				],
 			},
@@ -1694,39 +1771,65 @@ export class Mailwizz implements INodeType {
 						const fromEmail = getRequiredString('listFromEmail', 'Default from email is required.');
 						const fromName = getRequiredString('listFromName', 'Default from name is required.');
 						const replyTo = getRequiredString('listReplyTo', 'Default reply-to email is required.');
-						const company = getRequiredString('listCompanyName', 'Company name is required.');
+						const subject = asString(this.getNodeParameter('listSubject', itemIndex, ''))?.trim() ?? '';
+						const companyName = getRequiredString('listCompanyName', 'Company name is required.');
 						const address1 = getRequiredString('listAddress1', 'Company address line 1 is required.');
 						const country = getRequiredString('listCountry', 'Company country is required.');
 						const city = getRequiredString('listCity', 'Company city is required.');
-						const zip = getRequiredString('listZip', 'Company ZIP is required.');
+						const zipCode = getRequiredString('listZip', 'Company ZIP is required.');
 
 						const address2 = asString(this.getNodeParameter('listAddress2', itemIndex, ''))?.trim() ?? '';
 						const state = asString(this.getNodeParameter('listState', itemIndex, ''))?.trim() ?? '';
+						const zoneName = asString(this.getNodeParameter('listZoneName', itemIndex, ''))?.trim() ?? '';
 						const phone = asString(this.getNodeParameter('listPhone', itemIndex, ''))?.trim() ?? '';
 
 						const options = this.getNodeParameter('listOptions', itemIndex, {}) as IDataObject;
 						const notifications = this.getNodeParameter('listNotifications', itemIndex, {}) as IDataObject;
+
+						const defaultsPayload: IDataObject = {
+							from_name: fromName,
+							from_email: fromEmail,
+							reply_to: replyTo,
+						};
+
+						if (subject) {
+							defaultsPayload.subject = subject;
+						}
+
+						const companyPayload: IDataObject = {
+							name: companyName,
+							address_1: address1,
+							country,
+							zone: state,
+						};
+
+						if (address2) {
+							companyPayload.address_2 = address2;
+						}
+
+						if (zoneName) {
+							companyPayload.zone_name = zoneName;
+						}
+
+						if (city) {
+							companyPayload.city = city;
+						}
+
+						if (zipCode) {
+							companyPayload.zip_code = zipCode;
+						}
+
+						if (phone) {
+							companyPayload.phone = phone;
+						}
 
 						const listPayload: IDataObject = {
 							general: {
 								name,
 								description,
 							},
-							defaults: {
-								from_name: fromName,
-								from_email: fromEmail,
-								reply_to: replyTo,
-							},
-							company: {
-								name: company,
-								address_1: address1,
-								address_2: address2,
-								country,
-								zone: state,
-								city,
-								zip,
-								phone,
-							},
+							defaults: defaultsPayload,
+							company: companyPayload,
 						};
 
 						const optionPayload: IDataObject = {};
@@ -1750,12 +1853,18 @@ export class Mailwizz implements INodeType {
 						}
 
 						const notificationPayload: IDataObject = {};
-						const subscribeNotification = asString(notifications.subscribe)?.trim();
-						if (subscribeNotification) notificationPayload.subscribe = subscribeNotification;
-						const unsubscribeNotification = asString(notifications.unsubscribe)?.trim();
-						if (unsubscribeNotification) notificationPayload.unsubscribe = unsubscribeNotification;
-						const dailyNotification = asString(notifications.daily)?.trim();
-						if (dailyNotification) notificationPayload.daily = dailyNotification;
+						const subscribeFlag = asString(notifications.subscribe)?.trim();
+						if (subscribeFlag) notificationPayload.subscribe = subscribeFlag;
+						const subscribeTarget = asString(notifications.subscribeTo)?.trim();
+						if (subscribeTarget) notificationPayload.subscribe_to = subscribeTarget;
+						const unsubscribeFlag = asString(notifications.unsubscribe)?.trim();
+						if (unsubscribeFlag) notificationPayload.unsubscribe = unsubscribeFlag;
+						const unsubscribeTarget = asString(notifications.unsubscribeTo)?.trim();
+						if (unsubscribeTarget) notificationPayload.unsubscribe_to = unsubscribeTarget;
+						const dailyFlag = asString(notifications.daily)?.trim();
+						if (dailyFlag) notificationPayload.daily = dailyFlag;
+						const dailyTarget = asString(notifications.dailyTo)?.trim();
+						if (dailyTarget) notificationPayload.daily_to = dailyTarget;
 
 						if (Object.keys(notificationPayload).length > 0) {
 							listPayload.notifications = notificationPayload;

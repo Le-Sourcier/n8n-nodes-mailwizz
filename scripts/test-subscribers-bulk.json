@@ -1,0 +1,104 @@
+{
+  "subscribers": [
+    {
+      "EMAIL": "alice.martin@example.com",
+      "FNAME": "Alice",
+      "LNAME": "Martin"
+    },
+    {
+      "EMAIL": "bob.dupont@example.com",
+      "FNAME": "Bob",
+      "LNAME": "Dupont"
+    },
+    {
+      "EMAIL": "claire.bernard@example.com",
+      "FNAME": "Claire",
+      "LNAME": "Bernard"
+    },
+    {
+      "EMAIL": "david.rousseau@example.com",
+      "FNAME": "David",
+      "LNAME": "Rousseau"
+    },
+    {
+      "EMAIL": "emma.petit@example.com",
+      "FNAME": "Emma",
+      "LNAME": "Petit"
+    },
+    {
+      "EMAIL": "francois.robert@example.com",
+      "FNAME": "François",
+      "LNAME": "Robert"
+    },
+    {
+      "EMAIL": "gabrielle.richard@example.com",
+      "FNAME": "Gabrielle",
+      "LNAME": "Richard"
+    },
+    {
+      "EMAIL": "henri.durand@example.com",
+      "FNAME": "Henri",
+      "LNAME": "Durand"
+    },
+    {
+      "EMAIL": "isabelle.moreau@example.com",
+      "FNAME": "Isabelle",
+      "LNAME": "Moreau"
+    },
+    {
+      "EMAIL": "julien.simon@example.com",
+      "FNAME": "Julien",
+      "LNAME": "Simon"
+    },
+    {
+      "EMAIL": "karine.laurent@example.com",
+      "FNAME": "Karine",
+      "LNAME": "Laurent"
+    },
+    {
+      "EMAIL": "lucas.michel@example.com",
+      "FNAME": "Lucas",
+      "LNAME": "Michel"
+    },
+    {
+      "EMAIL": "marie.garcia@example.com",
+      "FNAME": "Marie",
+      "LNAME": "Garcia"
+    },
+    {
+      "EMAIL": "nicolas.martinez@example.com",
+      "FNAME": "Nicolas",
+      "LNAME": "Martinez"
+    },
+    {
+      "EMAIL": "olivia.andre@example.com",
+      "FNAME": "Olivia",
+      "LNAME": "André"
+    },
+    {
+      "EMAIL": "pierre.thomas@example.com",
+      "FNAME": "Pierre",
+      "LNAME": "Thomas"
+    },
+    {
+      "EMAIL": "quentin.blanc@example.com",
+      "FNAME": "Quentin",
+      "LNAME": "Blanc"
+    },
+    {
+      "EMAIL": "rachel.guerin@example.com",
+      "FNAME": "Rachel",
+      "LNAME": "Guerin"
+    },
+    {
+      "EMAIL": "sophie.boyer@example.com",
+      "FNAME": "Sophie",
+      "LNAME": "Boyer"
+    },
+    {
+      "EMAIL": "thomas.roux@example.com",
+      "FNAME": "Thomas",
+      "LNAME": "Roux"
+    }
+  ]
+}
