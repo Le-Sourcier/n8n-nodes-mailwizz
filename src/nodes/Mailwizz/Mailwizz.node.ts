@@ -940,6 +940,28 @@ export class Mailwizz implements INodeType {
 				},
 			},
 			{
+				displayName: 'Template Source',
+				name: 'templateSource',
+				type: 'options',
+				options: [
+					{
+						name: 'Use Saved Template',
+						value: 'template',
+					},
+					{
+						name: 'Provide HTML Content',
+						value: 'content',
+					},
+				],
+				default: 'template',
+				displayOptions: {
+					show: {
+						resource: ['campaign'],
+						operation: ['create'],
+					},
+				},
+			},
+			{
 				displayName: 'Template',
 				name: 'templateId',
 				type: 'options',
@@ -952,8 +974,27 @@ export class Mailwizz implements INodeType {
 					show: {
 						resource: ['campaign'],
 						operation: ['create'],
+						templateSource: ['template'],
 					},
 				},
+			},
+			{
+				displayName: 'Template HTML',
+				name: 'templateContent',
+				type: 'string',
+				typeOptions: {
+					rows: 6,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['campaign'],
+						operation: ['create'],
+						templateSource: ['content'],
+					},
+				},
+				description:
+					'HTML content for the campaign template. Use expressions to reference incoming item data.',
 			},
 			{
 				displayName: 'List ID',
@@ -2151,8 +2192,8 @@ export class Mailwizz implements INodeType {
 					const replyTo = this.getNodeParameter('replyTo', itemIndex) as string;
 					const sendAt = this.getNodeParameter('sendAt', itemIndex) as string;
 					const urlTracking = this.getNodeParameter('urlTracking', itemIndex) as string;
-					const templateId = this.getNodeParameter('templateId', itemIndex) as string;
 					const useWordPressSubject = this.getNodeParameter('useWpSubject', itemIndex) as boolean;
+					const templateSource = this.getNodeParameter('templateSource', itemIndex) as string;
 					const passWordPressData = this.getNodeParameter('passWordPressData', itemIndex) as boolean;
 
 					let subject: string;
@@ -2228,63 +2269,109 @@ export class Mailwizz implements INodeType {
 						campaignPayload.segment_uid = segmentUid;
 					}
 
-					let templateContent = '';
-					let useCustomContent = false;
+					let wpFieldMapping: WordPressFieldMapping | undefined;
+					let wpSubjectField = 'post_title';
 
 					if (passWordPressData) {
-						try {
-							const templateResponse = (await mailwizzApiRequest.call(
-								this,
-								'GET',
-								`/templates/${templateId}`,
-								{},
-								{},
-								{},
-								itemIndex,
-							)) as IDataObject;
-
-							const templateRecord = getFirstRecord(templateResponse);
-							templateContent = asString(templateRecord?.content) ?? '';
-							useCustomContent = templateContent.length > 0;
-						} catch (error) {
-							if (!this.continueOnFail()) {
-								throw error;
-							}
-						}
-					}
-
-					if (useCustomContent && templateContent) {
 						const fieldsRaw = this.getNodeParameter('wpDataFields', itemIndex, {}) as IDataObject;
-						const fieldMapping: WordPressFieldMapping = {
+						wpFieldMapping = {
 							featuredImageField: asString(fieldsRaw.featuredImageField),
 							excerptField: asString(fieldsRaw.excerptField),
 							dateField: asString(fieldsRaw.dateField),
 							linkField: asString(fieldsRaw.linkField),
 							contentField: asString(fieldsRaw.contentField),
 						};
-						const subjectField = ensureString(
+						wpSubjectField = ensureString(
 							this.getNodeParameter('wpSubjectField', itemIndex, 'post_title'),
 							'post_title',
 						);
-						const enrichedContent = injectWordPressData(
-							templateContent,
-							items[itemIndex].json,
-							subjectField,
-							fieldMapping,
-						);
+					}
 
-						campaignPayload.template = {
-							content: enrichedContent,
+					let templateBlock: IDataObject | undefined;
+
+					if (templateSource === 'content') {
+						const providedContent = ensureString(this.getNodeParameter('templateContent', itemIndex));
+						if (!providedContent) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Template HTML is required when providing custom content.',
+								{ itemIndex },
+							);
+						}
+
+						const finalContent =
+							passWordPressData && wpFieldMapping
+								? injectWordPressData(
+										providedContent,
+										items[itemIndex].json,
+										wpSubjectField,
+										wpFieldMapping,
+								  )
+								: providedContent;
+
+						templateBlock = {
+							content: finalContent,
 							inline_css: 'no',
 							auto_plain_text: 'yes',
 						};
 					} else {
-						campaignPayload.template = {
-							template_uid: templateId,
-							inline_css: 'no',
-							auto_plain_text: 'yes',
-						};
+						const templateId = ensureString(this.getNodeParameter('templateId', itemIndex));
+						if (!templateId) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Template selection is required when using a saved template.',
+								{ itemIndex },
+							);
+						}
+
+						let templateContent = '';
+
+						if (passWordPressData) {
+							try {
+								const templateResponse = (await mailwizzApiRequest.call(
+									this,
+									'GET',
+									`/templates/${templateId}`,
+									{},
+									{},
+									{},
+									itemIndex,
+								)) as IDataObject;
+
+								const templateRecord = getFirstRecord(templateResponse);
+								templateContent = asString(templateRecord?.content) ?? '';
+							} catch (error) {
+								if (!this.continueOnFail()) {
+									throw error;
+								}
+							}
+						}
+
+						if (passWordPressData && templateContent && wpFieldMapping) {
+							const enrichedContent = injectWordPressData(
+								templateContent,
+								items[itemIndex].json,
+								wpSubjectField,
+								wpFieldMapping,
+							);
+
+							templateBlock = {
+								content: enrichedContent,
+								inline_css: 'no',
+								auto_plain_text: 'yes',
+							};
+						}
+
+						if (!templateBlock) {
+							templateBlock = {
+								template_uid: templateId,
+								inline_css: 'no',
+								auto_plain_text: 'yes',
+							};
+						}
 					}
+
+					campaignPayload.template = templateBlock;
 
 					const response = await mailwizzApiRequest.call(
 						this,

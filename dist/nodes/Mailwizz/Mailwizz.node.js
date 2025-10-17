@@ -140,12 +140,12 @@ class Mailwizz {
             },
             inputs: [
                 {
-                    type: "main" /* NodeConnectionType.Main */,
+                    type: n8n_workflow_1.NodeConnectionType.Main,
                 },
             ],
             outputs: [
                 {
-                    type: "main" /* NodeConnectionType.Main */,
+                    type: n8n_workflow_1.NodeConnectionType.Main,
                 },
             ],
             credentials: [
@@ -881,6 +881,28 @@ class Mailwizz {
                     },
                 },
                 {
+                    displayName: 'Template Source',
+                    name: 'templateSource',
+                    type: 'options',
+                    options: [
+                        {
+                            name: 'Use Saved Template',
+                            value: 'template',
+                        },
+                        {
+                            name: 'Provide HTML Content',
+                            value: 'content',
+                        },
+                    ],
+                    default: 'template',
+                    displayOptions: {
+                        show: {
+                            resource: ['campaign'],
+                            operation: ['create'],
+                        },
+                    },
+                },
+                {
                     displayName: 'Template',
                     name: 'templateId',
                     type: 'options',
@@ -893,8 +915,26 @@ class Mailwizz {
                         show: {
                             resource: ['campaign'],
                             operation: ['create'],
+                            templateSource: ['template'],
                         },
                     },
+                },
+                {
+                    displayName: 'Template HTML',
+                    name: 'templateContent',
+                    type: 'string',
+                    typeOptions: {
+                        rows: 6,
+                    },
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['campaign'],
+                            operation: ['create'],
+                            templateSource: ['content'],
+                        },
+                    },
+                    description: 'HTML content for the campaign template. Use expressions to reference incoming item data.',
                 },
                 {
                     displayName: 'List ID',
@@ -2063,8 +2103,8 @@ class Mailwizz {
                     const replyTo = this.getNodeParameter('replyTo', itemIndex);
                     const sendAt = this.getNodeParameter('sendAt', itemIndex);
                     const urlTracking = this.getNodeParameter('urlTracking', itemIndex);
-                    const templateId = this.getNodeParameter('templateId', itemIndex);
                     const useWordPressSubject = this.getNodeParameter('useWpSubject', itemIndex);
+                    const templateSource = this.getNodeParameter('templateSource', itemIndex);
                     const passWordPressData = this.getNodeParameter('passWordPressData', itemIndex);
                     let subject;
                     if (useWordPressSubject) {
@@ -2125,45 +2165,69 @@ class Mailwizz {
                     if (segmentUid) {
                         campaignPayload.segment_uid = segmentUid;
                     }
-                    let templateContent = '';
-                    let useCustomContent = false;
+                    let wpFieldMapping;
+                    let wpSubjectField = 'post_title';
                     if (passWordPressData) {
-                        try {
-                            const templateResponse = (await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateId}`, {}, {}, {}, itemIndex));
-                            const templateRecord = getFirstRecord(templateResponse);
-                            templateContent = (_e = asString(templateRecord === null || templateRecord === void 0 ? void 0 : templateRecord.content)) !== null && _e !== void 0 ? _e : '';
-                            useCustomContent = templateContent.length > 0;
-                        }
-                        catch (error) {
-                            if (!this.continueOnFail()) {
-                                throw error;
-                            }
-                        }
-                    }
-                    if (useCustomContent && templateContent) {
                         const fieldsRaw = this.getNodeParameter('wpDataFields', itemIndex, {});
-                        const fieldMapping = {
+                        wpFieldMapping = {
                             featuredImageField: asString(fieldsRaw.featuredImageField),
                             excerptField: asString(fieldsRaw.excerptField),
                             dateField: asString(fieldsRaw.dateField),
                             linkField: asString(fieldsRaw.linkField),
                             contentField: asString(fieldsRaw.contentField),
                         };
-                        const subjectField = ensureString(this.getNodeParameter('wpSubjectField', itemIndex, 'post_title'), 'post_title');
-                        const enrichedContent = injectWordPressData(templateContent, items[itemIndex].json, subjectField, fieldMapping);
-                        campaignPayload.template = {
-                            content: enrichedContent,
+                        wpSubjectField = ensureString(this.getNodeParameter('wpSubjectField', itemIndex, 'post_title'), 'post_title');
+                    }
+                    let templateBlock;
+                    if (templateSource === 'content') {
+                        const providedContent = ensureString(this.getNodeParameter('templateContent', itemIndex));
+                        if (!providedContent) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Template HTML is required when providing custom content.', { itemIndex });
+                        }
+                        const finalContent = passWordPressData && wpFieldMapping
+                            ? injectWordPressData(providedContent, items[itemIndex].json, wpSubjectField, wpFieldMapping)
+                            : providedContent;
+                        templateBlock = {
+                            content: finalContent,
                             inline_css: 'no',
                             auto_plain_text: 'yes',
                         };
                     }
                     else {
-                        campaignPayload.template = {
-                            template_uid: templateId,
-                            inline_css: 'no',
-                            auto_plain_text: 'yes',
-                        };
+                        const templateId = ensureString(this.getNodeParameter('templateId', itemIndex));
+                        if (!templateId) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Template selection is required when using a saved template.', { itemIndex });
+                        }
+                        let templateContent = '';
+                        if (passWordPressData) {
+                            try {
+                                const templateResponse = (await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateId}`, {}, {}, {}, itemIndex));
+                                const templateRecord = getFirstRecord(templateResponse);
+                                templateContent = (_e = asString(templateRecord === null || templateRecord === void 0 ? void 0 : templateRecord.content)) !== null && _e !== void 0 ? _e : '';
+                            }
+                            catch (error) {
+                                if (!this.continueOnFail()) {
+                                    throw error;
+                                }
+                            }
+                        }
+                        if (passWordPressData && templateContent && wpFieldMapping) {
+                            const enrichedContent = injectWordPressData(templateContent, items[itemIndex].json, wpSubjectField, wpFieldMapping);
+                            templateBlock = {
+                                content: enrichedContent,
+                                inline_css: 'no',
+                                auto_plain_text: 'yes',
+                            };
+                        }
+                        if (!templateBlock) {
+                            templateBlock = {
+                                template_uid: templateId,
+                                inline_css: 'no',
+                                auto_plain_text: 'yes',
+                            };
+                        }
                     }
+                    campaignPayload.template = templateBlock;
                     const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/campaigns', {
                         campaign: campaignPayload,
                     }, {}, {}, itemIndex);
