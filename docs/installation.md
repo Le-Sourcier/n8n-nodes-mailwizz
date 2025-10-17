@@ -1,10 +1,5 @@
 # Installation and Configuration
 
-[English](#english) | [Polski](#polski)
-
-<a name="english"></a>
-## English
-
 This guide will walk you through the process of installing and configuring the MailWizz node for n8n.
 
 ### Installation
@@ -23,7 +18,7 @@ If you're running n8n in a Cloudron environment, you'll need to add the node to 
    - Add or modify the following lines:
    ```bash
    # Add n8n-nodes-mailwizz-ls to the list of modules
-   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.5"
+   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.1.0"
    
    # Add mailwizz to the list of allowed external modules
    export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
@@ -42,7 +37,7 @@ If you're running n8n in a standard environment:
 1. **Install the Node**
    - Run the following command in your n8n installation directory:
    ```bash
-   npm install n8n-nodes-mailwizz-ls@2.0.5
+   npm install n8n-nodes-mailwizz-ls@2.1.0
    ```
 
 2. **Restart n8n**
@@ -83,8 +78,8 @@ The MailWizz node can be used for various operations:
    - Optionally use category mapping to determine lists and segments based on WordPress post categories
 2. **Manage Campaigns**
    - Resource: Campaign
-   - Operation: Get
-   - Retrieve an individual campaign for auditing or re-use inside your workflow
+   - Operations: Get / Track Click / Track Open / Track Unsubscribe
+   - Retrieve an individual campaign or push tracking events back to MailWizz
 3. **Manage Lists**
    - Resource: List
    - Operations: Create / Get / Get All
@@ -94,11 +89,15 @@ The MailWizz node can be used for various operations:
    - Resource: Template
    - Operations: Create / Get / Get All
    - Create HTML templates with optional plain-text and inline CSS flags, or fetch existing templates
-5. **Bulk Create Subscribers**
+5. **Manage Subscribers**
    - Resource: Subscriber
-   - Operation: Create Bulk
-   - Push one or more subscribers to a list using a JSON array payload
-6. **Transactional Emails**
+   - Operations: Create / Create Bulk / Get / Get All / Get Confirmed / Get Unconfirmed / Get Unsubscribed / Update / Update by Email / Delete / Unsubscribe by Email
+   - Add new subscribers, update existing entries (by UID or email), remove or unsubscribe contacts, or pull status-filtered listings
+6. **Manage Segments**
+   - Resource: List Segment
+   - Operations: Create / Get / Get All / Update / Delete
+   - Build MailWizz segments with field-based or campaign-based conditions directly in your workflow
+7. **Transactional Emails**
    - Resource: Transactional Email
    - Operations: Create / Get / Get All
    - Send immediate or scheduled transactional emails, or inspect existing transactional email logs
@@ -123,41 +122,6 @@ If you encounter issues with the MailWizz node:
    - Verify the parameters you're passing to the node
    - Check the error message in the n8n execution logs
    - Ensure your MailWizz instance has the required permissions
-
----
-
-<a name="polski"></a>
-## Polski
-
-Ten przewodnik przeprowadzi Cię przez proces instalacji i konfiguracji node'a MailWizz dla n8n.
-
-### Instalacja
-
-#### W Środowisku Cloudron
-
-Jeśli używasz n8n w środowisku Cloudron, musisz dodać node do zmiennych środowiskowych:
-
-1. **Dostęp do Menedżera Plików Cloudron**
-   - Zaloguj się do panelu Cloudron
-   - Wybierz aplikację n8n
-   - Kliknij "Files", aby uzyskać dostęp do menedżera plików
-
-2. **Edycja Pliku Zmiennych Środowiskowych**
-   - Przejdź do pliku `/app/data/env.sh`
-   - Dodaj lub zmodyfikuj następujące linie:
-   ```bash
-   # Dodaj n8n-nodes-mailwizz-ls do listy modułów
-   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.3"
-   
-   # Dodaj mailwizz do listy dozwolonych zewnętrznych modułów
-   export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
-   ```
-   - Jeśli masz już inne moduły w tych zmiennych, dodaj nowe, oddzielając je spacjami
-
-3. **Restart n8n**
-   - Wróć do panelu Cloudron
-   - Wybierz aplikację n8n
-   - Kliknij menu ("...") i wybierz "Restart"
 
 #### W Standardowym Środowisku n8n
 

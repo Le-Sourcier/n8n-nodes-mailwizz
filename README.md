@@ -1,30 +1,27 @@
 # n8n-nodes-mailwizz-ls
 
-[English](#english) | [Polski](#polski)
-
-<a name="english"></a>
-## English
-
-### Overview
+## Overview
 
 This package provides a modern integration between n8n and self-hosted MailWizz (API v2). It enables you to automate email marketing campaigns based on WordPress content while working with the latest n8n runtime and MailWizz authentication model (public/private API keys).
 
-### Key Features
+## Key Features
 
 - **Campaign Automation** - Create new campaigns or fetch existing campaigns using the MailWizz v2 API
+- **Campaign Tracking** - Record subscriber click, open, or unsubscribe events directly from n8n
 - **Category Mapping** - Map WordPress categories to MailWizz lists and segments
 - **Template Management** - Create new templates or fetch existing ones with optional content injection
-- **List Management** - Create lists with company defaults, options, and notifications directly from n8n
-- **Bulk Subscriber Imports** - Push batches of subscribers into any list with a JSON payload
+- **List Management** - Create lists with company defaults, options, and notifications that match the API schema
+- **Subscriber Management** - Create, update, delete, or unsubscribe list members (individually, in bulk, or by email lookup)
+- **Segment Management** - Create, update, retrieve, or delete list segments with advanced list/campaign conditions
 - **Transactional Emails** - Send, list, or inspect transactional emails from your workflows
 
-### Installation
+## Installation
 
 #### In Cloudron Environment
 
 ```bash
 # Edit the file /app/data/env.sh
-export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.5"
+export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.1.0"
 export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 
 # Restart the n8n application from Cloudron dashboard
@@ -33,10 +30,10 @@ export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
 #### In Standard n8n Environment
 
 ```bash
-npm install n8n-nodes-mailwizz-ls@2.0.5
+npm install n8n-nodes-mailwizz-ls@2.1.0
 ```
 
-### Documentation
+## Documentation
 
 For detailed information on installation, configuration, and usage, see the documentation files:
 
@@ -45,74 +42,16 @@ For detailed information on installation, configuration, and usage, see the docu
 - [How to Find Your MailWizz API Key](docs/api-key-info.md)
 - [Example Workflow](docs/workflow-example.md)
 
-### Requirements
+## Requirements
 
 - n8n version 1.80.0 or later
 - MailWizz self-hosted instance with API v2 enabled (public + private keys)
 - WordPress instance with REST API access (for WordPress integration)
 
-### Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-### License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-<a name="polski"></a>
-## Polski
-
-### Przegląd
-
-Ten pakiet zapewnia integrację między n8n a MailWizz, umożliwiając automatyzację kampanii email marketingowych na podstawie treści z WordPressa. Dzięki temu konektorowi możesz automatycznie tworzyć kampanie w MailWizz, gdy nowe wpisy są publikowane w WordPress.
-
-### Główne Funkcje
-
-- **Tworzenie Kampanii** - Automatyczne tworzenie kampanii w MailWizz
-- **Mapowanie Kategorii** - Mapowanie kategorii WordPress do list i segmentów MailWizz
-- **Integracja z Szablonami** - Wykorzystanie istniejących szablonów MailWizz do kampanii z uzupełnianiem treści
-- **Dynamiczne Tematy** - Używanie tytułów wpisów WordPress jako tematów kampanii
-- **Zarządzanie Listami i Szablonami** - Pobieranie list i szablonów z Mailwizz
-
-### Instalacja
-
-#### W Środowisku Cloudron
-
-```bash
-# Edytuj plik /app/data/env.sh
-export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.0.3"
-export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
-
-# Zrestartuj aplikację n8n z panelu Cloudron
-```
-
-#### W Standardowym Środowisku n8n
-
-```bash
-npm install n8n-nodes-mailwizz-ls@2.0.3
-```
-
-### Dokumentacja
-
-Szczegółowe informacje na temat instalacji, konfiguracji i użytkowania znajdziesz w plikach dokumentacji:
-
-- [Instalacja i Konfiguracja](docs/installation.md)
-- [Mapowanie Kategorii](docs/category-mapping.md)
-- [Jak Znaleźć Klucz API MailWizz](docs/api-key-info.md)
-- [Przykładowy Przepływ Pracy](docs/workflow-example.md)
-
-### Wymagania
-
-- n8n w wersji 1.80.0 lub nowszej
-- Samodzielna instancja MailWizz z aktywnym API (klucze publiczny i prywatny)
-- Instancja WordPress z dostępem do REST API (dla integracji z WordPress)
-
-### Współpraca
-
-Zachęcamy do współpracy! Propozycje zmian można zgłaszać poprzez Pull Request.
-
-### Licencja
-
-Ten projekt jest dostępny na licencji MIT - szczegóły znajdują się w pliku LICENSE.

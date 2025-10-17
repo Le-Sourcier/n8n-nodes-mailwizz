@@ -1,605 +1,210 @@
 # Example Workflow
 
-[English](#english) | [Polski](#polski)
+This sample workflow shows how to publish a new MailWizz campaign whenever a WordPress post goes live, enrich the content with category mapping, and optionally capture tracking or subscriber updates. You can use it as a reference when designing your own automations.
 
-<a name="english"></a>
-## English
+## Workflow Overview
 
-This document describes a detailed example workflow in n8n that automatically creates campaigns in MailWizz based on new posts in WordPress.
+1. **WordPress Trigger** – listens for newly published posts.  
+2. **IF Filter** – ensures only posts that meet your criteria pass through.  
+3. **MailWizz Campaign (Create)** – builds a campaign using the post data and category mapping.  
+4. **MailWizz Subscriber (Optional)** – updates or creates a subscriber related to the post author.  
+5. **MailWizz Campaign (Track Open) (Optional)** – demonstrates how to register opens manually if you need to reconcile data.  
+6. **Notification (Slack/Email)** – confirms that the campaign was created successfully.
 
-## Overview of the Workflow
+## Step-by-Step Configuration
 
-1. **WordPress Trigger** - detects new posts in WordPress
-2. **Filter** - filters posts that meet specific criteria
-3. **MailWizz** - creates a new campaign based on the post
-4. **Slack/Email Notification** (optional) - notifies about campaign creation
+### 1. WordPress Trigger
 
-## Detailed Configuration
+1. Add a **WordPress** node.  
+2. Use your WordPress credentials.  
+3. Set **Operation** to `On New Post`.  
+4. Choose the post type/status to monitor (e.g. `post`, `publish`).  
+5. Adjust polling interval to balance freshness and API load.
 
-### 1. WordPress Trigger Configuration
+### 2. IF Filter (optional)
 
-1. Add a "WordPress" node
-2. Select authentication to your WordPress site
-3. Set the operation to "On New Post"
-4. Additional settings:
-   - **Post Type**: Post (or other post type)
-   - **Post Status**: Publish (to only react to published posts)
-   - **Categories**: Optionally limit to selected categories
-   - **Tags**: Optionally limit to selected tags
-   - **Polling Interval**: Set how often n8n should check for new posts (e.g., 5 minutes)
+- Add an **IF** node to allow only posts that satisfy conditions such as:
+  ```javascript
+  {{$json["status"] === "publish" && $json["categories"].includes("News")}}
+  ```
+- Connect the **true** output to the next node so that posts outside the rule are discarded or handled elsewhere.
 
-### 2. Filter Node Configuration (optional)
+### 3. MailWizz Campaign → Create
 
-1. Add an "IF" node
-2. Set a condition, e.g., `{{$json["post_type"] == "post" && $json["post_status"] == "publish"}}`
-3. You can add additional filters, e.g., only posts from a specific category
+Configure the **MailWizz** node with:
 
-### 3. MailWizz Node Configuration
+- **Resource**: `campaign`  
+- **Operation**: `create`  
+- **Name**: `WordPress Post: {{$json["post_title"]}}`  
+- **Type**: `regular`  
+- **From Name/Email**: sender info  
+- **Reply To**: fallback reply address  
+- **Send At**: `{{$now.plus(1, "hours").format("YYYY-MM-DD HH:mm:ss")}}` (adjust as needed)  
+- **Use WordPress Data for Subject**: enable if you want to reuse the post title  
+- **Use Category Mapping**: enable and configure mappings to direct each post to the correct MailWizz list/segment  
+- **Template ID**: provide the template UID to pre-fill your layout  
+- **URL Tracking**: typically `yes` for MailWizz analytics
 
-1. Add a "MailWizz" node
-2. Select authentication to your MailWizz
-3. Select the "Campaign" resource
-4. Select the "Create" operation
-5. Configure campaign parameters:
-   - **Name**: `WordPress Post: {{$json["post_title"]}}` (use WordPress data)
-   - **Type**: Regular
-   - **From Name**: Your sender name
-   - **From Email**: Your sender email
-   - **Subject**: Check "Use WordPress Data for Subject" and set "WordPress Post Field for Subject" to "post_title"
-   - **Reply To**: Your reply-to email
-   - **Send At**: Set date and time or use an expression, e.g., `{{$now.plus(1, "hours")}}` (to send in an hour)
-   - **Use Category Mapping**: Enable if you want to use category mapping
-   - **Category Mapping**: Add mappings for your categories (if enabled)
-   - **Default List ID**: Your default MailWizz list ID
-   - **Default Segment ID**: (Optional) Your default segment ID
-   - **URL Tracking**: Yes
-   - **Template ID**: Your MailWizz template ID
+### 4. Optional Subscriber Sync
 
-### 4. Notification Configuration (optional)
+If you need to ensure the post author is subscribed to the chosen list, add another **MailWizz** node:
 
-1. Add a "Slack" or "Send Email" node
-2. Configure notification about campaign creation, e.g.:
-   - **Message**: `Created a new campaign based on post: {{$node["MailWizz"].json["campaign_uid"]}}`
+- **Resource**: `subscriber`  
+- **Operation**: `create` (or `updateByEmail` if you expect the author to exist)  
+- **List ID**: match the list chosen by category mapping (use expressions if necessary)  
+- **Subscriber Email**: `{{$json["author_email"]}}` (requires the trigger to supply it)  
+- Add **Subscriber Fields** such as `FNAME` and `LNAME` extracted from the WordPress payload.
+
+### 5. Optional Tracking Call
+
+When you need to log a synthetic open or click (for example, when migrating historical data), configure a campaign tracking node:
+
+- **Resource**: `campaign`  
+- **Operation**: `trackOpen` (or `trackClick` / `trackUnsubscribe`)  
+- **Campaign ID**: campaign UID from the previous node (`{{$node["MailWizz"].json["campaign_uid"]}}`)  
+- **Subscriber ID**: UID of the subscriber you want to attribute the event to.
+
+### 6. Notification
+
+Add a **Slack**, **Email**, or **Microsoft Teams** node. Example Slack message:
+
+```
+Created a MailWizz campaign (UID: {{$node["MailWizz"].json["campaign_uid"]}})
+```
+
+Use the output of the campaign node to populate links or metadata for your marketing team.
 
 ## Example Workflow JSON
 
-You can import this workflow directly into n8n:
+The snippet below mirrors the flow described above (without optional nodes). Import it via **Workflow → Import from File** in n8n and adjust the credentials/IDs:
 
 ```json
 {
-"nodes": [
-      {
-         "parameters": {
-            "authentication": "genericCredentialType",
-            "operation": "getAll",
-            "postType": "post",
-            "postStatus": "publish",
-            "returnAll": false,
-            "limit": 1,
-            "options": {
-               "filterByStatus": true,
-               "filterByTaxonomies": false
-            }
-         },
-         "id": "3b7eee8d-bebb-48cf-8c23-6d61db76a1d5",
-         "name": "WordPress",
-         "type": "n8n-nodes-base.wordpress",
-         "typeVersion": 1,
-         "position": [
-            250,
-            300
-         ],
-         "credentials": {
-            "wordpressApi": {
-               "id": "1",
-               "name": "WordPress account"
-            }
-         }
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "operation": "getAll",
+        "postType": "post",
+        "postStatus": "publish",
+        "returnAll": false,
+        "limit": 1,
+        "options": {
+          "filterByStatus": true
+        }
       },
-      {
-         "parameters": {
-            "conditions": {
-               "string": [
-                  {
-                     "value1": "={{$json[\"status\"]}}",
-                     "operation": "equal",
-                     "value2": "publish"
-                  }
-               ]
+      "name": "WordPress",
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json[\"status\"]}}",
+              "operation": "equal",
+              "value2": "publish"
             }
-         },
-         "id": "a95d9673-8404-4fea-b813-aa807a28c979",
-         "name": "IF",
-         "type": "n8n-nodes-base.if",
-         "typeVersion": 1,
-         "position": [
-            460,
-            300
-         ]
+          ]
+        }
       },
-      {
-         "parameters": {
-            "resource": "campaign",
-            "operation": "create",
-            "name": "=WordPress Post: {{$json[\"post_title\"]}}",
-            "type": "regular",
-            "fromName": "Your Name",
-            "fromEmail": "your-email@example.com",
-            "replyTo": "reply-to@example.com",
-            "sendAt": "={{$now.plus(1, \"hours\").format(\"YYYY-MM-DD HH:mm:ss\")}}",
-            "useCategoryMapping": true,
-            "categoryMapping": {
-               "mapping": [
-                  {
-                     "wpCategory": "News",
-                     "mwListId": "your-list-id",
-                     "mwSegmentId": "news-segment-id"
-                  },
-                  {
-                     "wpCategory": "Tutorials",
-                     "mwListId": "your-list-id",
-                     "mwSegmentId": "tutorials-segment-id"
-                  },
-                  {
-                     "wpCategory": "Analysis",
-                     "mwListId": "your-list-id",
-                     "mwSegmentId": "analysis-segment-id"
-                  }
-               ]
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "resource": "campaign",
+        "operation": "create",
+        "name": "=WordPress Post: {{$json[\"post_title\"]}}",
+        "type": "regular",
+        "fromName": "Your Name",
+        "fromEmail": "marketing@example.com",
+        "replyTo": "reply@example.com",
+        "sendAt": "={{$now.plus(1, \"hours\").format(\"YYYY-MM-DD HH:mm:ss\")}}",
+        "useCategoryMapping": true,
+        "categoryMapping": {
+          "mapping": [
+            {
+              "wpCategory": "News",
+              "mwListId": "list_uid_news",
+              "mwSegmentId": "segment_uid_news"
             },
-            "defaultListId": "your-default-list-id",
-            "defaultSegmentId": "your-default-segment-id",
-            "wpCategoriesField": "categories",
-            "urlTracking": "yes",
-            "templateId": "your-template-id",
-            "useWpSubject": true,
-            "wpSubjectField": "post_title"
-         },
-         "id": "4e80f0c8-3ae4-4a93-b5e0-c1ec6a6d84dd",
-         "name": "MailWizz",
-         "type": "n8n-nodes-base.mailwizz",
-         "typeVersion": 1,
-         "position": [
-            670,
-            300
-         ],
-         "credentials": {
-            "mailwizzApi": {
-               "id": "2",
-               "name": "MailWizz account"
+            {
+              "wpCategory": "Tutorials",
+              "mwListId": "list_uid_tutorials",
+              "mwSegmentId": "segment_uid_guides"
             }
-         }
+          ]
+        },
+        "defaultListId": "list_uid_default",
+        "defaultSegmentId": "segment_uid_default",
+        "templateId": "template_uid_main",
+        "useWpSubject": true,
+        "wpSubjectField": "post_title",
+        "urlTracking": "yes"
       },
-      {
-         "parameters": {
-            "channel": "campaign-notifications",
-            "text": "=Created a new campaign based on post: {{$node[\"MailWizz\"].json[\"campaign_uid\"]}}",
-            "otherOptions": {}
-         },
-         "id": "f4b84eef-c6e0-4e5a-9bfc-6c7acbf9c716",
-         "name": "Slack",
-         "type": "n8n-nodes-base.slack",
-         "typeVersion": 1,
-         "position": [
-            880,
-            300
-         ],
-         "credentials": {
-            "slackApi": {
-               "id": "3",
-               "name": "Slack account"
-            }
-         }
-      }
-   ],
-   "connections": {
-      "WordPress": {
-         "main": [
-            [
-               {
-                  "node": "IF",
-                  "type": "main",
-                  "index": 0
-               }
-            ]
-         ]
+      "name": "MailWizz Campaign",
+      "type": "n8n-nodes-base.mailwizz",
+      "typeVersion": 1,
+      "position": [670, 300]
+    },
+    {
+      "parameters": {
+        "channel": "campaign-notifications",
+        "text": "=Created campaign {{$node[\"MailWizz Campaign\"].json[\"campaign_uid\"]}}",
+        "otherOptions": {}
       },
-      "IF": {
-         "true": [
-            [
-               {
-                  "node": "MailWizz",
-                  "type": "main",
-                  "index": 0
-               }
-            ]
-         ]
-      },
-      "MailWizz": {
-         "main": [
-            [
-               {
-                  "node": "Slack",
-                  "type": "main",
-                  "index": 0
-               }
-            ]
-         ]
-      }
-   },
-   "active": false,
-   "settings": {
-      "executionOrder": "v1"
-   },
-   "tag": "MailWizz Integration",
-   "meta": {
-      "instanceId": "example-instance-id"
-   },
-   "versionId": "1c2e8b8d-a5e4-4bda-a7e4-dfc6f7823b26"
-}
-```
-
-## How to Customize the Workflow
-
-### 1. Using Other WordPress Fields
-
-You can use various fields from WordPress in your MailWizz campaign:
-
-- **Post title**: `{{$json["post_title"]}}`
-- **Post URL**: `{{$json["link"]}}`
-- **Post content**: `{{$json["post_content"]}}`
-- **Excerpt**: `{{$json["post_excerpt"]}}`
-- **Publication date**: `{{$json["post_date"]}}`
-- **Author**: `{{$json["post_author"]}}`
-
-### 2. Dynamic Send Time Setting
-
-You can dynamically set the campaign send time, e.g.:
-
-- **Immediately**: `{{$now.format("YYYY-MM-DD HH:mm:ss")}}`
-- **In an hour**: `{{$now.plus(1, "hours").format("YYYY-MM-DD HH:mm:ss")}}`
-- **Next day at 10:00**: `{{$now.plus(1, "days").format("YYYY-MM-DD")}} 10:00:00`
-
-### 3. Advanced Filters
-
-You can create more advanced filters, e.g.:
-
-- **Only specific categories**: `{{$json["categories"].includes("marketing")}}`
-- **Only posts with featured image**: `{{$json["featured_media"] !== 0}}`
-- **Only long posts**: `{{$json["post_content"].length > 1000}}`
-
-### 4. Using Different Templates for Different Categories
-
-You can use different templates for different post categories:
-
-```javascript
-// Function in Function Node before MailWizz
-let templateId = "default-template-id";
-
-if ($json["categories"].includes("news")) {
-  templateId = "news-template-id";
-} else if ($json["categories"].includes("product")) {
-  templateId = "product-template-id";
-}
-
-return {
-  json: {
-    ...$json,
-    templateId
+      "name": "Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [880, 300]
+    }
+  ],
+  "connections": {
+    "WordPress": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "true": [
+        [
+          {
+            "node": "MailWizz Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MailWizz Campaign": {
+      "main": [
+        [
+          {
+            "node": "Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   }
-};
-```
-
-## Tips and Best Practices
-
-1. **Test the workflow** - Use test mode in n8n to check if the workflow works correctly before activating it.
-
-2. **Add error handling** - Configure an "Error Trigger" node or notifications to receive information about errors.
-
-3. **Monitor operation** - Regularly check n8n and MailWizz logs to make sure everything is working correctly.
-
-4. **Frequency limiting** - If you publish a lot of posts, consider using "Merge" or "Function" nodes to group campaigns.
-
-5. **Security** - Regularly update passwords and API tokens used in n8n.
-
----
-
-<a name="polski"></a>
-## Polski
-
-Ten dokument opisuje szczegółowy przykładowy przepływ pracy w n8n, który automatycznie tworzy kampanie w MailWizz na podstawie nowych wpisów w WordPress.
-
-## Przegląd Przepływu Pracy
-
-1. **WordPress Trigger** - wykrywa nowe wpisy w WordPress
-2. **Filter** - filtruje wpisy, które spełniają określone kryteria
-3. **MailWizz** - tworzy nową kampanię na podstawie wpisu
-4. **Slack/Email Notification** (opcjonalnie) - powiadamia o utworzeniu kampanii
-
-## Szczegółowa Konfiguracja
-
-### 1. Konfiguracja WordPress Trigger
-
-1. Dodaj node "WordPress"
-2. Wybierz uwierzytelnianie do swojej strony WordPress
-3. Ustaw operację na "On New Post"
-4. Dodatkowe ustawienia:
-   - **Post Type**: Post (lub inny typ wpisu)
-   - **Post Status**: Publish (aby reagować tylko na opublikowane wpisy)
-   - **Categories**: Opcjonalnie ogranicz do wybranych kategorii
-   - **Tags**: Opcjonalnie ogranicz do wybranych tagów
-   - **Polling Interval**: Ustaw jak często n8n ma sprawdzać nowe wpisy (np. 5 minut)
-
-### 2. Konfiguracja Filter Node (opcjonalnie)
-
-1. Dodaj node "IF"
-2. Ustaw warunek, np. `{{$json["post_type"] == "post" && $json["post_status"] == "publish"}}`
-3. Możesz dodać dodatkowe filtry, np. tylko wpisy z określonej kategorii
-
-### 3. Konfiguracja MailWizz Node
-
-1. Dodaj node "MailWizz"
-2. Wybierz uwierzytelnianie do swojego MailWizz
-3. Wybierz zasób "Campaign"
-4. Wybierz operację "Create"
-5. Skonfiguruj parametry kampanii:
-   - **Name**: `WordPress Post: {{$json["post_title"]}}` (użyj danych z WordPress)
-   - **Type**: Regular
-   - **From Name**: Twoja nazwa nadawcy
-   - **From Email**: Twój email nadawcy
-   - **Subject**: Zaznacz "Use WordPress Data for Subject" i ustaw "WordPress Post Field for Subject" na "post_title"
-   - **Reply To**: Twój email do odpowiedzi
-   - **Send At**: Ustaw datę i czas lub użyj wyrażenia, np. `{{$now.plus(1, "hours")}}` (aby wysłać za godzinę)
-   - **Use Category Mapping**: Włącz, jeśli chcesz używać mapowania kategorii
-   - **Category Mapping**: Dodaj mapowania dla swoich kategorii (jeśli włączone)
-   - **Default List ID**: Twoje domyślne ID listy MailWizz
-   - **Default Segment ID**: (Opcjonalnie) Twoje domyślne ID segmentu
-   - **URL Tracking**: Yes
-   - **Template ID**: Twoje ID szablonu MailWizz
-
-### 4. Konfiguracja Powiadomień (opcjonalnie)
-
-1. Dodaj node "Slack" lub "Send Email"
-2. Skonfiguruj powiadomienie o utworzeniu kampanii, np.:
-   - **Message**: `Utworzono nową kampanię na podstawie wpisu: {{$node["MailWizz"].json["campaign_uid"]}}`
-
-## Przykładowy JSON Przepływu Pracy
-
-Możesz zaimportować ten przepływ bezpośrednio do n8n:
-
-```json
-{
-   "nodes": [
-      {
-         "parameters": {
-            "authentication": "genericCredentialType",
-            "operation": "getAll",
-            "postType": "post",
-            "postStatus": "publish",
-            "returnAll": false,
-            "limit": 1,
-            "options": {
-               "filterByStatus": true,
-               "filterByTaxonomies": false
-            }
-         },
-         "id": "3b7eee8d-bebb-48cf-8c23-6d61db76a1d5",
-         "name": "WordPress",
-         "type": "n8n-nodes-base.wordpress",
-         "typeVersion": 1,
-         "position": [
-            250,
-            300
-         ],
-         "credentials": {
-            "wordpressApi": {
-               "id": "1",
-               "name": "WordPress account"
-            }
-         }
-      },
-      {
-         "parameters": {
-            "conditions": {
-               "string": [
-                  {
-                     "value1": "={{$json[\"status\"]}}",
-                     "operation": "equal",
-                     "value2": "publish"
-                  }
-               ]
-            }
-         },
-         "id": "a95d9673-8404-4fea-b813-aa807a28c979",
-         "name": "IF",
-         "type": "n8n-nodes-base.if",
-         "typeVersion": 1,
-         "position": [
-            460,
-            300
-         ]
-      },
-      {
-         "parameters": {
-            "resource": "campaign",
-            "operation": "create",
-            "name": "=WordPress Post: {{$json[\"post_title\"]}}",
-            "type": "regular",
-            "fromName": "Your Name",
-            "fromEmail": "your-email@example.com",
-            "replyTo": "reply-to@example.com",
-            "sendAt": "={{$now.plus(1, \"hours\").format(\"YYYY-MM-DD HH:mm:ss\")}}",
-            "useCategoryMapping": true,
-            "categoryMapping": {
-               "mapping": [
-                  {
-                     "wpCategory": "News",
-                     "mwListId": "your-list-id",
-                     "mwSegmentId": "news-segment-id"
-                  },
-                  {
-                     "wpCategory": "Tutorials",
-                     "mwListId": "your-list-id",
-                     "mwSegmentId": "tutorials-segment-id"
-                  },
-                  {
-                     "wpCategory": "Analysis",
-                     "mwListId": "your-list-id",
-                     "mwSegmentId": "analysis-segment-id"
-                  }
-               ]
-            },
-            "defaultListId": "your-default-list-id",
-            "defaultSegmentId": "your-default-segment-id",
-            "wpCategoriesField": "categories",
-            "urlTracking": "yes",
-            "templateId": "your-template-id",
-            "useWpSubject": true,
-            "wpSubjectField": "post_title"
-         },
-         "id": "4e80f0c8-3ae4-4a93-b5e0-c1ec6a6d84dd",
-         "name": "MailWizz",
-         "type": "n8n-nodes-base.mailwizz",
-         "typeVersion": 1,
-         "position": [
-            670,
-            300
-         ],
-         "credentials": {
-            "mailwizzApi": {
-               "id": "2",
-               "name": "MailWizz account"
-            }
-         }
-      },
-      {
-         "parameters": {
-            "channel": "campaign-notifications",
-            "text": "=Created a new campaign based on post: {{$node[\"MailWizz\"].json[\"campaign_uid\"]}}",
-            "otherOptions": {}
-         },
-         "id": "f4b84eef-c6e0-4e5a-9bfc-6c7acbf9c716",
-         "name": "Slack",
-         "type": "n8n-nodes-base.slack",
-         "typeVersion": 1,
-         "position": [
-            880,
-            300
-         ],
-         "credentials": {
-            "slackApi": {
-               "id": "3",
-               "name": "Slack account"
-            }
-         }
-      }
-   ],
-   "connections": {
-      "WordPress": {
-         "main": [
-            [
-               {
-                  "node": "IF",
-                  "type": "main",
-                  "index": 0
-               }
-            ]
-         ]
-      },
-      "IF": {
-         "true": [
-            [
-               {
-                  "node": "MailWizz",
-                  "type": "main",
-                  "index": 0
-               }
-            ]
-         ]
-      },
-      "MailWizz": {
-         "main": [
-            [
-               {
-                  "node": "Slack",
-                  "type": "main",
-                  "index": 0
-               }
-            ]
-         ]
-      }
-   },
-   "active": false,
-   "settings": {
-      "executionOrder": "v1"
-   },
-   "tag": "MailWizz Integration",
-   "meta": {
-      "instanceId": "example-instance-id"
-   },
-   "versionId": "1c2e8b8d-a5e4-4bda-a7e4-dfc6f7823b26"
 }
 ```
 
-## Jak Dostosować Przepływ Pracy
+## Best Practices
 
-### 1. Wykorzystanie Innych Pól WordPress
-
-Możesz wykorzystać różne pola z WordPress w kampanii MailWizz:
-
-- **Tytuł wpisu**: `{{$json["post_title"]}}`
-- **URL wpisu**: `{{$json["link"]}}`
-- **Treść wpisu**: `{{$json["post_content"]}}`
-- **Wyciąg**: `{{$json["post_excerpt"]}}`
-- **Data publikacji**: `{{$json["post_date"]}}`
-- **Autor**: `{{$json["post_author"]}}`
-
-### 2. Dynamiczne Ustawianie Czasu Wysyłki
-
-Możesz dynamicznie ustawić czas wysyłki kampanii, np.:
-
-- **Natychmiast**: `{{$now.format("YYYY-MM-DD HH:mm:ss")}}`
-- **Za godzinę**: `{{$now.plus(1, "hours").format("YYYY-MM-DD HH:mm:ss")}}`
-- **Następnego dnia o 10:00**: `{{$now.plus(1, "days").format("YYYY-MM-DD")}} 10:00:00`
-
-### 3. Zaawansowane Filtry
-
-Możesz stworzyć bardziej zaawansowane filtry, np.:
-
-- **Tylko określone kategorie**: `{{$json["categories"].includes("marketing")}}`
-- **Tylko wpisy z obrazkiem wyróżniającym**: `{{$json["featured_media"] !== 0}}`
-- **Tylko długie wpisy**: `{{$json["post_content"].length > 1000}}`
-
-### 4. Używanie Różnych Szablonów dla Różnych Kategorii
-
-Możesz używać różnych szablonów dla różnych kategorii wpisów:
-
-```javascript
-// Funkcja w Function Node przed MailWizz
-let templateId = "domyslne-id-szablonu";
-
-if ($json["categories"].includes("newsy")) {
-  templateId = "id-szablonu-newsy";
-} else if ($json["categories"].includes("produkty")) {
-  templateId = "id-szablonu-produkty";
-}
-
-return {
-  json: {
-    ...$json,
-    templateId
-  }
-};
-```
-
-## Wskazówki i Najlepsze Praktyki
-
-1. **Testuj przepływ** - Używaj trybu testowego w n8n, aby sprawdzić, czy przepływ działa poprawnie, zanim go aktywujesz.
-
-2. **Dodaj obsługę błędów** - Skonfiguruj node "Error Trigger" lub powiadomienia, aby otrzymywać informacje o błędach.
-
-3. **Monitoruj działanie** - Regularnie sprawdzaj logi n8n i MailWizz, aby upewnić się, że wszystko działa poprawnie.
-
-4. **Limitowanie częstotliwości** - Jeśli publikujesz dużo wpisów, rozważ użycie node'a "Merge" lub "Function" do grupowania kampanii.
-
-5. **Bezpieczeństwo** - Regularnie aktualizuj hasła i tokeny API używane w n8n.
+- **Test in a sandbox** – run the workflow with sample posts or a staging MailWizz instance before going live.  
+- **Handle errors** – use the **Error Trigger** workflow or add try/catch logic to capture API failures.  
+- **Monitor API usage** – the new subscriber and segment endpoints can generate additional requests; batch operations where possible.  
+- **Version control** – export and store your workflow JSON in git so changes are auditable.

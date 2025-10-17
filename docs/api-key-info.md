@@ -1,123 +1,52 @@
 # How to Find Your MailWizz API Key Pair
 
-[English](#english) | [Polski](#polski)
+To use the MailWizz node for n8n you need both the **public** and **private** API keys from your MailWizz installation. This guide explains how to locate or create the key pair and how to keep it secure.
 
-<a name="english"></a>
-## English
+## Locating the API Keys
 
-To use the MailWizz node for n8n, you need both the **public** and **private** API keys from your MailWizz system. This document provides step-by-step instructions on how to obtain the key pair.
+1. **Sign in to the MailWizz backend** using an administrator account.
+2. **Open the API management page**  
+   - Navigate to **Settings → API keys** (label may vary slightly by MailWizz version).
+3. **Create a key** if one does not already exist  
+   - Click **Create new API key**.  
+   - Provide a meaningful name such as “n8n Integration”.  
+   - Enable the permissions required for your workflows.  
+   - Save the new key.
+4. **Copy the key pair**  
+   - MailWizz displays both a **Public key** and a **Private key**.  
+   - Copy the values and store them in a password manager or secure secret vault.
 
-### Finding the API Key Pair in MailWizz
+![MailWizz API key screen](images/mailwizz-api-key-screen.png)
 
-1. **Log in to your MailWizz admin panel** as an administrator.
+## Recommended Permissions
 
-2. **Navigate to the API management section**:
-   - In the main menu, find and click on `API Keys` or `API Management`
-   - Depending on your MailWizz version, it may be listed under `Settings`
+The connector uses multiple MailWizz endpoints. Ensure the key pair has permission to:
 
-3. **Create a new API key** (if you don't have one yet):
-   - Click the `Create new API key` button (or similar)
-   - Enter a recognizable name for the key (e.g. “n8n Integration”)
-   - Set appropriate permissions (for full integration, enabling all relevant permissions is recommended)
-   - Save the new key
+- Create and manage **campaigns**.
+- Access **lists**, **segments**, and subscribers.
+- Read and create **templates**.
+- Send and view **transactional emails** (if you plan to use that resource).
 
-4. **Copy the key pair**:
-   - From the list of existing keys, copy both the **Public key** and the **Private key**
-   - Each key is typically a long alphanumeric string
+If you follow the principle of least privilege, you can start with the full set above and then narrow it down once your workflow requirements are known.
 
-![Example MailWizz API Key Screen](images/mailwizz-api-key-screen.png)
+## Rate Limits and Performance
 
-### API Key Permissions
+Some MailWizz deployments enforce API throttling. When building flows that sync many subscribers or campaigns:
 
-For the node to work properly, your key pair should have the following permissions:
+1. Review the throttling rules configured in MailWizz.
+2. Add delays or batching nodes in n8n to avoid exceeding request limits.
+3. Implement retries around API calls that may return `429 Too Many Requests`.
 
-- **Campaigns** – create and manage campaigns
-- **Lists** – access lists and segments
-- **Templates** – read template metadata and content
+## Troubleshooting Authentication
 
-### API Limits
+- **Invalid credentials** – Confirm both keys are active and correctly copied.  
+- **Incorrect URL** – The API base URL must point to your instance and end with `/api`.  
+- **Insufficient permissions** – Ask a MailWizz administrator to confirm the key’s permission set.  
+- **Server logs** – MailWizz application logs often include additional details for failed requests.
 
-MailWizz may enforce limits on the number of API requests you can make within a given time window. If you plan to use the API intensively, we recommend:
+## Security Checklist
 
-1. Checking the limits defined in your MailWizz installation
-2. Configuring appropriate delays in your n8n workflows
-3. Implementing retry mechanisms in case of rate limit responses
-
-### Troubleshooting API Authentication
-
-If you encounter authentication issues:
-
-1. **Ensure the key pair is active** – verify in the MailWizz panel that the keys have not been disabled
-2. **Verify the API URL** – it should point to your instance and end with `/api`
-3. **Confirm permissions** – an administrator may have restricted permissions for specific keys
-4. **Inspect MailWizz logs** – they can provide detailed error information for API requests
-
-### Security
-
-The API key pair provides full access to your MailWizz account, so:
-
-- Store both keys securely
-- Never share them with unauthorized individuals
-- Consider rotating the keys periodically
-- If you suspect compromise, revoke the existing keys and generate new ones immediately
-
----
-
-<a name="polski"></a>
-## Polski
-
-Aby korzystać z node'a MailWizz dla n8n, potrzebujesz **publicznego** i **prywatnego** klucza API z Twojego systemu MailWizz. Ten dokument zawiera instrukcję krok po kroku, jak uzyskać tę parę kluczy.
-
-### Znajdowanie pary kluczy API w MailWizz
-
-1. **Zaloguj się do panelu administracyjnego MailWizz** jako administrator.
-
-2. **Przejdź do sekcji zarządzania API**:
-   - W menu głównym wybierz `API Keys` lub `API Management`
-   - W zależności od wersji MailWizz opcja może znajdować się w sekcji `Settings`
-
-3. **Utwórz nowy klucz API** (jeśli jeszcze nie masz):
-   - Kliknij przycisk `Create new API key` (lub podobny)
-   - Wprowadź nazwę klucza (np. „Integracja n8n”)
-   - Ustaw odpowiednie uprawnienia (dla pełnej integracji zalecane są wszystkie potrzebne uprawnienia)
-   - Zapisz nowy klucz
-
-4. **Skopiuj parę kluczy**:
-   - Z listy istniejących kluczy skopiuj zarówno **Publiczny klucz**, jak i **Prywatny klucz**
-   - Każdy z nich to długi ciąg znaków alfanumerycznych
-
-![Przykładowy ekran klucza API MailWizz](images/mailwizz-api-key-screen.png)
-
-### Uprawnienia kluczy API
-
-Aby node działał prawidłowo, para kluczy powinna mieć następujące uprawnienia:
-
-- **Campaigns** – tworzenie i zarządzanie kampaniami
-- **Lists** – dostęp do list i segmentów
-- **Templates** – odczyt metadanych i treści szablonów
-
-### Limity API
-
-MailWizz może ograniczać liczbę zapytań API w określonym przedziale czasu. Jeśli planujesz intensywne użycie API, zalecamy:
-
-1. Sprawdzenie limitów skonfigurowanych w Twojej instalacji MailWizz
-2. Ustawienie odpowiednich opóźnień w przepływach pracy n8n
-3. Zaimplementowanie mechanizmów ponownych prób w przypadku błędów limitów
-
-### Rozwiązywanie problemów z uwierzytelnianiem API
-
-W przypadku problemów z uwierzytelnianiem:
-
-1. **Sprawdź, czy para kluczy jest aktywna** – w panelu MailWizz upewnij się, że klucze nie zostały dezaktywowane
-2. **Zweryfikuj adres URL API** – powinien wskazywać Twoją instancję i kończyć się na `/api`
-3. **Potwierdź uprawnienia** – administrator mógł ograniczyć uprawnienia dla konkretnych kluczy
-4. **Przejrzyj logi MailWizz** – mogą zawierać szczegółowe informacje o błędach związanych z API
-
-### Bezpieczeństwo
-
-Para kluczy API daje pełny dostęp do Twojego konta MailWizz, dlatego:
-
-- Przechowuj oba klucze w bezpiecznym miejscu
-- Nie udostępniaj ich osobom nieupoważnionym
-- Rozważ okresową rotację kluczy API
-- Jeśli podejrzewasz kompromitację, natychmiast unieważnij klucze i wygeneruj nowe
+- Treat the key pair like a password; never commit it to version control.  
+- Rotate keys periodically or immediately after any suspected compromise.  
+- Remove unused keys from MailWizz to reduce exposure.  
+- Use n8n credentials to store the values securely rather than hard-coding them into workflows.
