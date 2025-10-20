@@ -150,7 +150,11 @@ const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]
 
 const ensureComplianceTags = (content: string): string => {
 	const requiredTokens: Array<{ token: string; html: string }> = [
-		{ token: '[UNSUBSCRIBE_URL]', html: '<p><a href="[UNSUBSCRIBE_URL]">Se désinscrire</a></p>' },
+		{
+			token: '[UNSUBSCRIBE_URL]',
+			html:
+				'<p>Pour vous désinscrire, cliquez ici : <a href="[UNSUBSCRIBE_URL]">Se désinscrire</a><br />[UNSUBSCRIBE_URL]</p>',
+		},
 		{ token: '[COMPANY_FULL_ADDRESS]', html: '<p>[COMPANY_FULL_ADDRESS]</p>' },
 	];
 

@@ -101,7 +101,10 @@ const injectWordPressData = (content, item, subjectField, fields) => {
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const ensureComplianceTags = (content) => {
     const requiredTokens = [
-        { token: '[UNSUBSCRIBE_URL]', html: '<p><a href="[UNSUBSCRIBE_URL]">Se désinscrire</a></p>' },
+        {
+            token: '[UNSUBSCRIBE_URL]',
+            html: '<p>Pour vous désinscrire, cliquez ici : <a href="[UNSUBSCRIBE_URL]">Se désinscrire</a><br />[UNSUBSCRIBE_URL]</p>',
+        },
         { token: '[COMPANY_FULL_ADDRESS]', html: '<p>[COMPANY_FULL_ADDRESS]</p>' },
     ];
     const missingSnippets = requiredTokens
