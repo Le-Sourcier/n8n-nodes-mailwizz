@@ -892,6 +892,30 @@ class Mailwizz {
                     },
                 },
                 {
+                    displayName: 'List Selection Mode',
+                    name: 'listSelectionMode',
+                    type: 'options',
+                    options: [
+                        {
+                            name: 'Select From Lists',
+                            value: 'dropdown',
+                        },
+                        {
+                            name: 'Provide Manually',
+                            value: 'manual',
+                        },
+                    ],
+                    default: 'dropdown',
+                    displayOptions: {
+                        show: {
+                            resource: ['campaign'],
+                            operation: ['create'],
+                            useCategoryMapping: [false],
+                        },
+                    },
+                    description: 'Selected list from dropdown or provide custom value via expression',
+                },
+                {
                     displayName: 'List',
                     name: 'listId',
                     type: 'options',
@@ -905,8 +929,25 @@ class Mailwizz {
                             resource: ['campaign'],
                             operation: ['create'],
                             useCategoryMapping: [false],
+                            listSelectionMode: ['dropdown'],
                         },
                     },
+                },
+                {
+                    displayName: 'List Identifier',
+                    name: 'listIdManual',
+                    type: 'string',
+                    required: true,
+                    default: '',
+                    displayOptions: {
+                        show: {
+                            resource: ['campaign'],
+                            operation: ['create'],
+                            useCategoryMapping: [false],
+                            listSelectionMode: ['manual'],
+                        },
+                    },
+                    description: 'List UID or name; can be provided through an expression, e.g. {{$json.data.record.general.name}}',
                 },
                 {
                     displayName: 'Segment',
@@ -2281,7 +2322,10 @@ class Mailwizz {
                         segmentUid = (_c = (_b = match === null || match === void 0 ? void 0 : match.mwSegmentId) !== null && _b !== void 0 ? _b : defaultSegment) !== null && _c !== void 0 ? _c : '';
                     }
                     else {
-                        const providedListId = ensureString(this.getNodeParameter('listId', itemIndex));
+                        const selectionMode = this.getNodeParameter('listSelectionMode', itemIndex);
+                        const providedListId = selectionMode === 'manual'
+                            ? ensureString(this.getNodeParameter('listIdManual', itemIndex))
+                            : ensureString(this.getNodeParameter('listId', itemIndex));
                         listUid = await resolveListUid(providedListId, itemIndex);
                         segmentUid = (_d = asString(this.getNodeParameter('segmentId', itemIndex, ''))) !== null && _d !== void 0 ? _d : '';
                     }
