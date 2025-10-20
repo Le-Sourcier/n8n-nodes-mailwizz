@@ -179,6 +179,31 @@ const ensureComplianceTags = (content: string): string => {
 	return `${content}${addition}`;
 };
 
+const toBase64 = (value: string): string => Buffer.from(value, 'utf8').toString('base64');
+
+const decodeIfBase64 = (value: string): string => {
+	const trimmed = value.trim();
+	if (trimmed.length === 0) {
+		return value;
+	}
+
+	if (!/^[A-Za-z0-9+/=\r\n]+$/.test(trimmed)) {
+		return value;
+	}
+
+	try {
+		const decoded = Buffer.from(trimmed, 'base64').toString('utf8');
+		// Heuristic: decoded HTML should contain angle brackets
+		if (decoded.includes('<') && decoded.includes('>')) {
+			return decoded;
+		}
+	} catch {
+		return value;
+	}
+
+	return value;
+};
+
 const extractRecords = (payload: IDataObject | undefined): IDataObject[] => {
 	if (!payload) {
 		return [];
@@ -2371,7 +2396,8 @@ export class Mailwizz implements INodeType {
 								)) as IDataObject;
 
 								const templateRecord = getFirstRecord(templateResponse);
-								templateContent = asString(templateRecord?.content) ?? '';
+								const rawContent = asString(templateRecord?.content) ?? '';
+								templateContent = decodeIfBase64(rawContent);
 							} catch (error) {
 								if (!this.continueOnFail()) {
 									throw error;
@@ -2421,7 +2447,8 @@ export class Mailwizz implements INodeType {
 								{ itemIndex },
 							);
 						}
-						templateBlock.content = contentWithTags;
+						templateBlock.content = toBase64(contentWithTags);
+						templateBlock.content_transfer_encoding = 'base64';
 					} else if (templateBlock.template_uid) {
 						try {
 							const templateResponse = (await mailwizzApiRequest.call(
@@ -2434,7 +2461,7 @@ export class Mailwizz implements INodeType {
 								itemIndex,
 							)) as IDataObject;
 							const templateRecord = getFirstRecord(templateResponse);
-							const templateContent = asString(templateRecord?.content) ?? '';
+							const templateContent = decodeIfBase64(asString(templateRecord?.content) ?? '');
 							if (!containsRequiredComplianceTokens(templateContent ?? '')) {
 								throw new NodeOperationError(
 									this.getNode(),
@@ -3445,16 +3472,16 @@ export class Mailwizz implements INodeType {
 							{},
 						) as IDataObject;
 
-						const ensuredContent = ensureComplianceTags(templateContent);
-
 						const templatePayload: IDataObject = {
 							name: templateName,
-							content: ensuredContent,
+							content: toBase64(templateContent),
+							content_transfer_encoding: 'base64',
 						};
 
 						const plainText = asString(additionalFields.plainText);
 						if (plainText) {
-							templatePayload.plain_text = plainText;
+							templatePayload.plain_text = toBase64(plainText);
+							templatePayload.plain_text_transfer_encoding = 'base64';
 						}
 
 						const inlineCss = asString(additionalFields.inlineCss);

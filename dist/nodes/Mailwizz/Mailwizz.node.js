@@ -121,6 +121,27 @@ const ensureComplianceTags = (content) => {
     }
     return `${content}${addition}`;
 };
+const toBase64 = (value) => Buffer.from(value, 'utf8').toString('base64');
+const decodeIfBase64 = (value) => {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+        return value;
+    }
+    if (!/^[A-Za-z0-9+/=\r\n]+$/.test(trimmed)) {
+        return value;
+    }
+    try {
+        const decoded = Buffer.from(trimmed, 'base64').toString('utf8');
+        // Heuristic: decoded HTML should contain angle brackets
+        if (decoded.includes('<') && decoded.includes('>')) {
+            return decoded;
+        }
+    }
+    catch {
+        return value;
+    }
+    return value;
+};
 const extractRecords = (payload) => {
     var _a;
     if (!payload) {
@@ -2226,7 +2247,8 @@ class Mailwizz {
                             try {
                                 const templateResponse = (await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateId}`, {}, {}, {}, itemIndex));
                                 const templateRecord = getFirstRecord(templateResponse);
-                                templateContent = (_e = asString(templateRecord === null || templateRecord === void 0 ? void 0 : templateRecord.content)) !== null && _e !== void 0 ? _e : '';
+                                const rawContent = (_e = asString(templateRecord === null || templateRecord === void 0 ? void 0 : templateRecord.content)) !== null && _e !== void 0 ? _e : '';
+                                templateContent = decodeIfBase64(rawContent);
                             }
                             catch (error) {
                                 if (!this.continueOnFail()) {
@@ -2261,13 +2283,14 @@ class Mailwizz {
                         if (!containsRequiredComplianceTokens(contentWithTags)) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Campaign HTML must include the tags [UNSUBSCRIBE_URL] and [COMPANY_FULL_ADDRESS].', { itemIndex });
                         }
-                        templateBlock.content = contentWithTags;
+                        templateBlock.content = toBase64(contentWithTags);
+                        templateBlock.content_transfer_encoding = 'base64';
                     }
                     else if (templateBlock.template_uid) {
                         try {
                             const templateResponse = (await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateBlock.template_uid}`, {}, {}, {}, itemIndex));
                             const templateRecord = getFirstRecord(templateResponse);
-                            const templateContent = (_f = asString(templateRecord === null || templateRecord === void 0 ? void 0 : templateRecord.content)) !== null && _f !== void 0 ? _f : '';
+                            const templateContent = decodeIfBase64((_f = asString(templateRecord === null || templateRecord === void 0 ? void 0 : templateRecord.content)) !== null && _f !== void 0 ? _f : '');
                             if (!containsRequiredComplianceTokens(templateContent !== null && templateContent !== void 0 ? templateContent : '')) {
                                 throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'The selected template must contain the tags [UNSUBSCRIBE_URL] and [COMPANY_FULL_ADDRESS].', { itemIndex });
                             }
@@ -2913,14 +2936,15 @@ class Mailwizz {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Template name and content are required.', { itemIndex });
                         }
                         const additionalFields = this.getNodeParameter('templateAdditionalFields', itemIndex, {});
-                        const ensuredContent = ensureComplianceTags(templateContent);
                         const templatePayload = {
                             name: templateName,
-                            content: ensuredContent,
+                            content: toBase64(templateContent),
+                            content_transfer_encoding: 'base64',
                         };
                         const plainText = asString(additionalFields.plainText);
                         if (plainText) {
-                            templatePayload.plain_text = plainText;
+                            templatePayload.plain_text = toBase64(plainText);
+                            templatePayload.plain_text_transfer_encoding = 'base64';
                         }
                         const inlineCss = asString(additionalFields.inlineCss);
                         if (inlineCss) {
