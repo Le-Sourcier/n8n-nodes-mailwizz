@@ -148,19 +148,23 @@ const injectWordPressData = (
 
 const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const ensureComplianceTags = (content: string): string => {
-	const requiredTokens: Array<{ token: string; html: string }> = [
-		{
-			token: '[UNSUBSCRIBE_URL]',
-			html:
-				'<p>Pour vous désinscrire, cliquez ici : <a href="[UNSUBSCRIBE_URL]">Se désinscrire</a><br />[UNSUBSCRIBE_URL]</p>',
-		},
-		{ token: '[COMPANY_FULL_ADDRESS]', html: '<p>[COMPANY_FULL_ADDRESS]</p>' },
-	];
+const requiredComplianceTokens = ['[UNSUBSCRIBE_URL]', '[COMPANY_FULL_ADDRESS]'];
 
-	const missingSnippets = requiredTokens
-		.filter(({ token }) => !new RegExp(escapeRegex(token), 'i').test(content))
-		.map(({ html }) => html);
+const containsRequiredComplianceTokens = (content: string): boolean => {
+	const normalized = content.toUpperCase();
+	return requiredComplianceTokens.every((token) => normalized.includes(token));
+};
+
+const ensureComplianceTags = (content: string): string => {
+	const complianceMap: Record<string, string> = {
+		'[UNSUBSCRIBE_URL]':
+			'<p>Pour vous désinscrire, cliquez ici : <a href="[UNSUBSCRIBE_URL]">Se désinscrire</a><br />[UNSUBSCRIBE_URL]</p>',
+		'[COMPANY_FULL_ADDRESS]': '<p>[COMPANY_FULL_ADDRESS]</p>',
+	};
+
+	const missingSnippets = requiredComplianceTokens
+		.filter((token) => !new RegExp(escapeRegex(token), 'i').test(content))
+		.map((token) => complianceMap[token]);
 
 	if (missingSnippets.length === 0) {
 		return content;
@@ -2277,25 +2281,29 @@ export class Mailwizz implements INodeType {
 						});
 					}
 
-					const campaignPayload: IDataObject = {
+					const generalPayload: IDataObject = {
 						name,
 						type,
-						list_uid: listUid,
 						from_name: fromName,
 						from_email: fromEmail,
 						reply_to: replyTo,
 						subject,
 						send_at: normaliseDate(sendAt),
-						options: {
-							url_tracking: urlTracking,
-							plain_text_email: 'yes',
-							auto_plain_text: 'yes',
-						},
+					};
+
+					const recipientsPayload: IDataObject = {
+						list_uid: listUid,
 					};
 
 					if (segmentUid) {
-						campaignPayload.segment_uid = segmentUid;
+						recipientsPayload.segment_uid = segmentUid;
 					}
+
+					const optionsPayload: IDataObject = {
+						url_tracking: urlTracking,
+						plain_text_email: 'yes',
+						auto_plain_text: 'yes',
+					};
 
 					let wpFieldMapping: WordPressFieldMapping | undefined;
 					let wpSubjectField = 'post_title';
@@ -2388,6 +2396,15 @@ export class Mailwizz implements INodeType {
 								inline_css: 'no',
 								auto_plain_text: 'yes',
 							};
+						} else if (templateContent) {
+							const normalizedContent = ensureComplianceTags(templateContent);
+							if (!containsRequiredComplianceTokens(normalizedContent)) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'The selected template must contain the tags [UNSUBSCRIBE_URL] and [COMPANY_FULL_ADDRESS].',
+									{ itemIndex },
+								);
+							}
 						}
 
 						if (!templateBlock) {
@@ -2399,7 +2416,49 @@ export class Mailwizz implements INodeType {
 						}
 					}
 
-					campaignPayload.template = templateBlock;
+					if (typeof templateBlock.content === 'string') {
+						const contentWithTags = ensureComplianceTags(templateBlock.content);
+						if (!containsRequiredComplianceTokens(contentWithTags)) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Campaign HTML must include the tags [UNSUBSCRIBE_URL] and [COMPANY_FULL_ADDRESS].',
+								{ itemIndex },
+							);
+						}
+						templateBlock.content = contentWithTags;
+					} else if (templateBlock.template_uid) {
+						try {
+							const templateResponse = (await mailwizzApiRequest.call(
+								this,
+								'GET',
+								`/templates/${templateBlock.template_uid}`,
+								{},
+								{},
+								{},
+								itemIndex,
+							)) as IDataObject;
+							const templateRecord = getFirstRecord(templateResponse);
+							const templateContent = asString(templateRecord?.content) ?? '';
+							if (!containsRequiredComplianceTokens(templateContent ?? '')) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'The selected template must contain the tags [UNSUBSCRIBE_URL] and [COMPANY_FULL_ADDRESS].',
+									{ itemIndex },
+								);
+							}
+						} catch (error) {
+							if (!this.continueOnFail()) {
+								throw error;
+							}
+						}
+					}
+
+					const campaignPayload: IDataObject = {
+						general: generalPayload,
+						recipients: recipientsPayload,
+						options: optionsPayload,
+						template: templateBlock,
+					};
 
 					const response = await mailwizzApiRequest.call(
 						this,

@@ -99,17 +99,19 @@ const injectWordPressData = (content, item, subjectField, fields) => {
     }, content);
 };
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const requiredComplianceTokens = ['[UNSUBSCRIBE_URL]', '[COMPANY_FULL_ADDRESS]'];
+const containsRequiredComplianceTokens = (content) => {
+    const normalized = content.toUpperCase();
+    return requiredComplianceTokens.every((token) => normalized.includes(token));
+};
 const ensureComplianceTags = (content) => {
-    const requiredTokens = [
-        {
-            token: '[UNSUBSCRIBE_URL]',
-            html: '<p>Pour vous désinscrire, cliquez ici : <a href="[UNSUBSCRIBE_URL]">Se désinscrire</a><br />[UNSUBSCRIBE_URL]</p>',
-        },
-        { token: '[COMPANY_FULL_ADDRESS]', html: '<p>[COMPANY_FULL_ADDRESS]</p>' },
-    ];
-    const missingSnippets = requiredTokens
-        .filter(({ token }) => !new RegExp(escapeRegex(token), 'i').test(content))
-        .map(({ html }) => html);
+    const complianceMap = {
+        '[UNSUBSCRIBE_URL]': '<p>Pour vous désinscrire, cliquez ici : <a href="[UNSUBSCRIBE_URL]">Se désinscrire</a><br />[UNSUBSCRIBE_URL]</p>',
+        '[COMPANY_FULL_ADDRESS]': '<p>[COMPANY_FULL_ADDRESS]</p>',
+    };
+    const missingSnippets = requiredComplianceTokens
+        .filter((token) => !new RegExp(escapeRegex(token), 'i').test(content))
+        .map((token) => complianceMap[token]);
     if (missingSnippets.length === 0) {
         return content;
     }
@@ -2109,7 +2111,7 @@ class Mailwizz {
         };
     }
     async execute() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51;
         const items = this.getInputData();
         const returnData = [];
         for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
@@ -2168,24 +2170,26 @@ class Mailwizz {
                             itemIndex,
                         });
                     }
-                    const campaignPayload = {
+                    const generalPayload = {
                         name,
                         type,
-                        list_uid: listUid,
                         from_name: fromName,
                         from_email: fromEmail,
                         reply_to: replyTo,
                         subject,
                         send_at: normaliseDate(sendAt),
-                        options: {
-                            url_tracking: urlTracking,
-                            plain_text_email: 'yes',
-                            auto_plain_text: 'yes',
-                        },
+                    };
+                    const recipientsPayload = {
+                        list_uid: listUid,
                     };
                     if (segmentUid) {
-                        campaignPayload.segment_uid = segmentUid;
+                        recipientsPayload.segment_uid = segmentUid;
                     }
+                    const optionsPayload = {
+                        url_tracking: urlTracking,
+                        plain_text_email: 'yes',
+                        auto_plain_text: 'yes',
+                    };
                     let wpFieldMapping;
                     let wpSubjectField = 'post_title';
                     if (passWordPressData) {
@@ -2240,6 +2244,12 @@ class Mailwizz {
                                 auto_plain_text: 'yes',
                             };
                         }
+                        else if (templateContent) {
+                            const normalizedContent = ensureComplianceTags(templateContent);
+                            if (!containsRequiredComplianceTokens(normalizedContent)) {
+                                throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'The selected template must contain the tags [UNSUBSCRIBE_URL] and [COMPANY_FULL_ADDRESS].', { itemIndex });
+                            }
+                        }
                         if (!templateBlock) {
                             templateBlock = {
                                 template_uid: templateId,
@@ -2248,12 +2258,39 @@ class Mailwizz {
                             };
                         }
                     }
-                    campaignPayload.template = templateBlock;
+                    if (typeof templateBlock.content === 'string') {
+                        const contentWithTags = ensureComplianceTags(templateBlock.content);
+                        if (!containsRequiredComplianceTokens(contentWithTags)) {
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Campaign HTML must include the tags [UNSUBSCRIBE_URL] and [COMPANY_FULL_ADDRESS].', { itemIndex });
+                        }
+                        templateBlock.content = contentWithTags;
+                    }
+                    else if (templateBlock.template_uid) {
+                        try {
+                            const templateResponse = (await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateBlock.template_uid}`, {}, {}, {}, itemIndex));
+                            const templateRecord = getFirstRecord(templateResponse);
+                            const templateContent = (_f = asString(templateRecord === null || templateRecord === void 0 ? void 0 : templateRecord.content)) !== null && _f !== void 0 ? _f : '';
+                            if (!containsRequiredComplianceTokens(templateContent !== null && templateContent !== void 0 ? templateContent : '')) {
+                                throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'The selected template must contain the tags [UNSUBSCRIBE_URL] and [COMPANY_FULL_ADDRESS].', { itemIndex });
+                            }
+                        }
+                        catch (error) {
+                            if (!this.continueOnFail()) {
+                                throw error;
+                            }
+                        }
+                    }
+                    const campaignPayload = {
+                        general: generalPayload,
+                        recipients: recipientsPayload,
+                        options: optionsPayload,
+                        template: templateBlock,
+                    };
                     const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/campaigns', {
                         campaign: campaignPayload,
                     }, {}, {}, itemIndex);
                     returnData.push({
-                        json: (_f = response) !== null && _f !== void 0 ? _f : {},
+                        json: (_g = response) !== null && _g !== void 0 ? _g : {},
                     });
                     continue;
                 }
@@ -2264,7 +2301,7 @@ class Mailwizz {
                     }
                     const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/campaigns/${campaignId}`, {}, {}, {}, itemIndex);
                     returnData.push({
-                        json: (_g = response) !== null && _g !== void 0 ? _g : {},
+                        json: (_h = response) !== null && _h !== void 0 ? _h : {},
                     });
                     continue;
                 }
@@ -2277,7 +2314,7 @@ class Mailwizz {
                     }
                     const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/campaigns/${campaignId}/track-url/${subscriberId}/${urlHash}`, {}, {}, {}, itemIndex);
                     returnData.push({
-                        json: (_h = response) !== null && _h !== void 0 ? _h : {},
+                        json: (_j = response) !== null && _j !== void 0 ? _j : {},
                     });
                     continue;
                 }
@@ -2291,7 +2328,7 @@ class Mailwizz {
                     }
                     const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/campaigns/${campaignId}/track-opening/${subscriberId}`, {}, {}, {}, itemIndex);
                     returnData.push({
-                        json: (_j = response) !== null && _j !== void 0 ? _j : {},
+                        json: (_k = response) !== null && _k !== void 0 ? _k : {},
                     });
                     continue;
                 }
@@ -2305,9 +2342,9 @@ class Mailwizz {
                         });
                     }
                     const payload = {};
-                    const ipAddress = (_k = asString(trackingDetails.ipAddress)) === null || _k === void 0 ? void 0 : _k.trim();
-                    const userAgent = (_l = asString(trackingDetails.userAgent)) === null || _l === void 0 ? void 0 : _l.trim();
-                    const reason = (_m = asString(trackingDetails.reason)) === null || _m === void 0 ? void 0 : _m.trim();
+                    const ipAddress = (_l = asString(trackingDetails.ipAddress)) === null || _l === void 0 ? void 0 : _l.trim();
+                    const userAgent = (_m = asString(trackingDetails.userAgent)) === null || _m === void 0 ? void 0 : _m.trim();
+                    const reason = (_o = asString(trackingDetails.reason)) === null || _o === void 0 ? void 0 : _o.trim();
                     if (ipAddress) {
                         payload.ip_address = ipAddress;
                     }
@@ -2319,7 +2356,7 @@ class Mailwizz {
                     }
                     const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/campaigns/${campaignId}/track-unsubscribe/${subscriberId}`, Object.keys(payload).length > 0 ? { data: payload } : {}, {}, {}, itemIndex);
                     returnData.push({
-                        json: (_o = response) !== null && _o !== void 0 ? _o : {},
+                        json: (_p = response) !== null && _p !== void 0 ? _p : {},
                     });
                     continue;
                 }
@@ -2338,16 +2375,16 @@ class Mailwizz {
                         const fromEmail = getRequiredString('listFromEmail', 'Default from email is required.');
                         const fromName = getRequiredString('listFromName', 'Default from name is required.');
                         const replyTo = getRequiredString('listReplyTo', 'Default reply-to email is required.');
-                        const subject = (_q = (_p = asString(this.getNodeParameter('listSubject', itemIndex, ''))) === null || _p === void 0 ? void 0 : _p.trim()) !== null && _q !== void 0 ? _q : '';
+                        const subject = (_r = (_q = asString(this.getNodeParameter('listSubject', itemIndex, ''))) === null || _q === void 0 ? void 0 : _q.trim()) !== null && _r !== void 0 ? _r : '';
                         const companyName = getRequiredString('listCompanyName', 'Company name is required.');
                         const address1 = getRequiredString('listAddress1', 'Company address line 1 is required.');
                         const country = getRequiredString('listCountry', 'Company country is required.');
                         const city = getRequiredString('listCity', 'Company city is required.');
                         const zipCode = getRequiredString('listZip', 'Company ZIP is required.');
-                        const address2 = (_s = (_r = asString(this.getNodeParameter('listAddress2', itemIndex, ''))) === null || _r === void 0 ? void 0 : _r.trim()) !== null && _s !== void 0 ? _s : '';
-                        const state = (_u = (_t = asString(this.getNodeParameter('listState', itemIndex, ''))) === null || _t === void 0 ? void 0 : _t.trim()) !== null && _u !== void 0 ? _u : '';
-                        const zoneName = (_w = (_v = asString(this.getNodeParameter('listZoneName', itemIndex, ''))) === null || _v === void 0 ? void 0 : _v.trim()) !== null && _w !== void 0 ? _w : '';
-                        const phone = (_y = (_x = asString(this.getNodeParameter('listPhone', itemIndex, ''))) === null || _x === void 0 ? void 0 : _x.trim()) !== null && _y !== void 0 ? _y : '';
+                        const address2 = (_t = (_s = asString(this.getNodeParameter('listAddress2', itemIndex, ''))) === null || _s === void 0 ? void 0 : _s.trim()) !== null && _t !== void 0 ? _t : '';
+                        const state = (_v = (_u = asString(this.getNodeParameter('listState', itemIndex, ''))) === null || _u === void 0 ? void 0 : _u.trim()) !== null && _v !== void 0 ? _v : '';
+                        const zoneName = (_x = (_w = asString(this.getNodeParameter('listZoneName', itemIndex, ''))) === null || _w === void 0 ? void 0 : _w.trim()) !== null && _x !== void 0 ? _x : '';
+                        const phone = (_z = (_y = asString(this.getNodeParameter('listPhone', itemIndex, ''))) === null || _y === void 0 ? void 0 : _y.trim()) !== null && _z !== void 0 ? _z : '';
                         if (!state && !zoneName) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide either the company state or the company zone name.', { itemIndex });
                         }
@@ -2393,47 +2430,47 @@ class Mailwizz {
                             company: companyPayload,
                         };
                         const optionPayload = {};
-                        const subscribeSubject = (_z = asString(options.subject)) === null || _z === void 0 ? void 0 : _z.trim();
+                        const subscribeSubject = (_0 = asString(options.subject)) === null || _0 === void 0 ? void 0 : _0.trim();
                         if (subscribeSubject)
                             optionPayload.email_subscribe_subject = subscribeSubject;
-                        const subscribeFromName = (_0 = asString(options.fromName)) === null || _0 === void 0 ? void 0 : _0.trim();
+                        const subscribeFromName = (_1 = asString(options.fromName)) === null || _1 === void 0 ? void 0 : _1.trim();
                         if (subscribeFromName)
                             optionPayload.email_subscribe_from_name = subscribeFromName;
-                        const subscribeFromEmail = (_1 = asString(options.fromEmail)) === null || _1 === void 0 ? void 0 : _1.trim();
+                        const subscribeFromEmail = (_2 = asString(options.fromEmail)) === null || _2 === void 0 ? void 0 : _2.trim();
                         if (subscribeFromEmail)
                             optionPayload.email_subscribe_from_email = subscribeFromEmail;
-                        const subscribeReplyTo = (_2 = asString(options.replyTo)) === null || _2 === void 0 ? void 0 : _2.trim();
+                        const subscribeReplyTo = (_3 = asString(options.replyTo)) === null || _3 === void 0 ? void 0 : _3.trim();
                         if (subscribeReplyTo)
                             optionPayload.email_subscribe_reply_to = subscribeReplyTo;
-                        const welcomeSubject = (_3 = asString(options.welcomeSubject)) === null || _3 === void 0 ? void 0 : _3.trim();
+                        const welcomeSubject = (_4 = asString(options.welcomeSubject)) === null || _4 === void 0 ? void 0 : _4.trim();
                         if (welcomeSubject)
                             optionPayload.email_welcome_subject = welcomeSubject;
-                        const sendWelcome = (_4 = asString(options.sendWelcome)) === null || _4 === void 0 ? void 0 : _4.trim();
+                        const sendWelcome = (_5 = asString(options.sendWelcome)) === null || _5 === void 0 ? void 0 : _5.trim();
                         if (sendWelcome)
                             optionPayload.send_welcome_email = sendWelcome;
-                        const sendConfirmation = (_5 = asString(options.sendConfirmation)) === null || _5 === void 0 ? void 0 : _5.trim();
+                        const sendConfirmation = (_6 = asString(options.sendConfirmation)) === null || _6 === void 0 ? void 0 : _6.trim();
                         if (sendConfirmation)
                             optionPayload.send_subscribe_confirmation = sendConfirmation;
                         if (Object.keys(optionPayload).length > 0) {
                             listPayload.options = optionPayload;
                         }
                         const notificationPayload = {};
-                        const subscribeFlag = (_6 = asString(notifications.subscribe)) === null || _6 === void 0 ? void 0 : _6.trim();
+                        const subscribeFlag = (_7 = asString(notifications.subscribe)) === null || _7 === void 0 ? void 0 : _7.trim();
                         if (subscribeFlag)
                             notificationPayload.subscribe = subscribeFlag;
-                        const subscribeTarget = (_7 = asString(notifications.subscribeTo)) === null || _7 === void 0 ? void 0 : _7.trim();
+                        const subscribeTarget = (_8 = asString(notifications.subscribeTo)) === null || _8 === void 0 ? void 0 : _8.trim();
                         if (subscribeTarget)
                             notificationPayload.subscribe_to = subscribeTarget;
-                        const unsubscribeFlag = (_8 = asString(notifications.unsubscribe)) === null || _8 === void 0 ? void 0 : _8.trim();
+                        const unsubscribeFlag = (_9 = asString(notifications.unsubscribe)) === null || _9 === void 0 ? void 0 : _9.trim();
                         if (unsubscribeFlag)
                             notificationPayload.unsubscribe = unsubscribeFlag;
-                        const unsubscribeTarget = (_9 = asString(notifications.unsubscribeTo)) === null || _9 === void 0 ? void 0 : _9.trim();
+                        const unsubscribeTarget = (_10 = asString(notifications.unsubscribeTo)) === null || _10 === void 0 ? void 0 : _10.trim();
                         if (unsubscribeTarget)
                             notificationPayload.unsubscribe_to = unsubscribeTarget;
-                        const dailyFlag = (_10 = asString(notifications.daily)) === null || _10 === void 0 ? void 0 : _10.trim();
+                        const dailyFlag = (_11 = asString(notifications.daily)) === null || _11 === void 0 ? void 0 : _11.trim();
                         if (dailyFlag)
                             notificationPayload.daily = dailyFlag;
-                        const dailyTarget = (_11 = asString(notifications.dailyTo)) === null || _11 === void 0 ? void 0 : _11.trim();
+                        const dailyTarget = (_12 = asString(notifications.dailyTo)) === null || _12 === void 0 ? void 0 : _12.trim();
                         if (dailyTarget)
                             notificationPayload.daily_to = dailyTarget;
                         if (Object.keys(notificationPayload).length > 0) {
@@ -2441,7 +2478,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/lists', { list: listPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_12 = response) !== null && _12 !== void 0 ? _12 : {},
+                            json: (_13 = response) !== null && _13 !== void 0 ? _13 : {},
                         });
                         continue;
                     }
@@ -2452,17 +2489,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_13 = response) !== null && _13 !== void 0 ? _13 : {},
+                            json: (_14 = response) !== null && _14 !== void 0 ? _14 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_14 = pagination.page) !== null && _14 !== void 0 ? _14 : 1) || 1;
-                        const perPage = Number((_15 = pagination.perPage) !== null && _15 !== void 0 ? _15 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_15 = pagination.page) !== null && _15 !== void 0 ? _15 : 1) || 1;
+                        const perPage = Number((_16 = pagination.perPage) !== null && _16 !== void 0 ? _16 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/lists', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_16 = response) !== null && _16 !== void 0 ? _16 : {},
+                            json: (_17 = response) !== null && _17 !== void 0 ? _17 : {},
                         });
                         continue;
                     }
@@ -2565,7 +2602,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers/bulk`, { subscribers: subscribersPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_17 = response) !== null && _17 !== void 0 ? _17 : {},
+                            json: (_18 = response) !== null && _18 !== void 0 ? _18 : {},
                         });
                         continue;
                     }
@@ -2582,7 +2619,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers`, { data: payload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_18 = response) !== null && _18 !== void 0 ? _18 : {},
+                            json: (_19 = response) !== null && _19 !== void 0 ? _19 : {},
                         });
                         continue;
                     }
@@ -2593,14 +2630,14 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/subscribers/${subscriberId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_19 = response) !== null && _19 !== void 0 ? _19 : {},
+                            json: (_20 = response) !== null && _20 !== void 0 ? _20 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll' || operation === 'getConfirmed' || operation === 'getUnconfirmed' || operation === 'getUnsubscribed') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_20 = pagination.page) !== null && _20 !== void 0 ? _20 : 1) || 1;
-                        const perPage = Number((_21 = pagination.perPage) !== null && _21 !== void 0 ? _21 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_21 = pagination.page) !== null && _21 !== void 0 ? _21 : 1) || 1;
+                        const perPage = Number((_22 = pagination.perPage) !== null && _22 !== void 0 ? _22 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const query = {
                             page,
                             per_page: perPage,
@@ -2616,7 +2653,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/subscribers`, {}, query, {}, itemIndex);
                         returnData.push({
-                            json: (_22 = response) !== null && _22 !== void 0 ? _22 : {},
+                            json: (_23 = response) !== null && _23 !== void 0 ? _23 : {},
                         });
                         continue;
                     }
@@ -2625,14 +2662,14 @@ class Mailwizz {
                         if (!subscriberId) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber ID is required.', { itemIndex });
                         }
-                        const newEmail = (_23 = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))) === null || _23 === void 0 ? void 0 : _23.trim();
+                        const newEmail = (_24 = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))) === null || _24 === void 0 ? void 0 : _24.trim();
                         const payload = buildSubscriberData(undefined, newEmail);
                         if (Object.keys(payload).length === 0) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide at least one field to update for the subscriber.', { itemIndex });
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'PUT', `/lists/${listId}/subscribers/${subscriberId}`, { data: payload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_24 = response) !== null && _24 !== void 0 ? _24 : {},
+                            json: (_25 = response) !== null && _25 !== void 0 ? _25 : {},
                         });
                         continue;
                     }
@@ -2642,18 +2679,18 @@ class Mailwizz {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
                         }
                         const record = await findSubscriberByEmail(subscriberEmail);
-                        const subscriberUid = (_25 = asString(record.subscriber_uid)) !== null && _25 !== void 0 ? _25 : asString(record.uid);
+                        const subscriberUid = (_26 = asString(record.subscriber_uid)) !== null && _26 !== void 0 ? _26 : asString(record.uid);
                         if (!subscriberUid) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Unable to resolve subscriber unique identifier.', { itemIndex });
                         }
-                        const newEmail = (_26 = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))) === null || _26 === void 0 ? void 0 : _26.trim();
+                        const newEmail = (_27 = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))) === null || _27 === void 0 ? void 0 : _27.trim();
                         const payload = buildSubscriberData(undefined, newEmail);
                         if (Object.keys(payload).length === 0) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide at least one field to update for the subscriber.', { itemIndex });
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'PUT', `/lists/${listId}/subscribers/${subscriberUid}`, { data: payload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_27 = response) !== null && _27 !== void 0 ? _27 : {},
+                            json: (_28 = response) !== null && _28 !== void 0 ? _28 : {},
                         });
                         continue;
                     }
@@ -2663,15 +2700,15 @@ class Mailwizz {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
                         }
                         const record = await findSubscriberByEmail(subscriberEmail);
-                        const subscriberUid = (_28 = asString(record.subscriber_uid)) !== null && _28 !== void 0 ? _28 : asString(record.uid);
+                        const subscriberUid = (_29 = asString(record.subscriber_uid)) !== null && _29 !== void 0 ? _29 : asString(record.uid);
                         if (!subscriberUid) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Unable to resolve subscriber unique identifier.', { itemIndex });
                         }
                         const details = this.getNodeParameter('unsubscribeDetails', itemIndex, {});
                         const payload = {};
-                        const ipAddress = (_29 = asString(details.ipAddress)) === null || _29 === void 0 ? void 0 : _29.trim();
-                        const userAgent = (_30 = asString(details.userAgent)) === null || _30 === void 0 ? void 0 : _30.trim();
-                        const reason = (_31 = asString(details.reason)) === null || _31 === void 0 ? void 0 : _31.trim();
+                        const ipAddress = (_30 = asString(details.ipAddress)) === null || _30 === void 0 ? void 0 : _30.trim();
+                        const userAgent = (_31 = asString(details.userAgent)) === null || _31 === void 0 ? void 0 : _31.trim();
+                        const reason = (_32 = asString(details.reason)) === null || _32 === void 0 ? void 0 : _32.trim();
                         if (ipAddress) {
                             payload.ip_address = ipAddress;
                         }
@@ -2683,7 +2720,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'PUT', `/lists/${listId}/subscribers/${subscriberUid}/unsubscribe`, Object.keys(payload).length > 0 ? { data: payload } : {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_32 = response) !== null && _32 !== void 0 ? _32 : {},
+                            json: (_33 = response) !== null && _33 !== void 0 ? _33 : {},
                         });
                         continue;
                     }
@@ -2694,7 +2731,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'DELETE', `/lists/${listId}/subscribers/${subscriberId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_33 = response) !== null && _33 !== void 0 ? _33 : {},
+                            json: (_34 = response) !== null && _34 !== void 0 ? _34 : {},
                         });
                         continue;
                     }
@@ -2825,7 +2862,7 @@ class Mailwizz {
                         const payload = buildSegmentPayload();
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/segments`, { data: payload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_34 = response) !== null && _34 !== void 0 ? _34 : {},
+                            json: (_35 = response) !== null && _35 !== void 0 ? _35 : {},
                         });
                         continue;
                     }
@@ -2836,17 +2873,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/segments/${segmentId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_35 = response) !== null && _35 !== void 0 ? _35 : {},
+                            json: (_36 = response) !== null && _36 !== void 0 ? _36 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_36 = pagination.page) !== null && _36 !== void 0 ? _36 : 1) || 1;
-                        const perPage = Number((_37 = pagination.perPage) !== null && _37 !== void 0 ? _37 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_37 = pagination.page) !== null && _37 !== void 0 ? _37 : 1) || 1;
+                        const perPage = Number((_38 = pagination.perPage) !== null && _38 !== void 0 ? _38 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${listId}/segments`, {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_38 = response) !== null && _38 !== void 0 ? _38 : {},
+                            json: (_39 = response) !== null && _39 !== void 0 ? _39 : {},
                         });
                         continue;
                     }
@@ -2858,7 +2895,7 @@ class Mailwizz {
                         const payload = buildSegmentPayload();
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'PUT', `/lists/${listId}/segments/${segmentId}`, { data: payload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_39 = response) !== null && _39 !== void 0 ? _39 : {},
+                            json: (_40 = response) !== null && _40 !== void 0 ? _40 : {},
                         });
                         continue;
                     }
@@ -2869,7 +2906,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'DELETE', `/lists/${listId}/segments/${segmentId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_40 = response) !== null && _40 !== void 0 ? _40 : {},
+                            json: (_41 = response) !== null && _41 !== void 0 ? _41 : {},
                         });
                         continue;
                     }
@@ -2902,7 +2939,7 @@ class Mailwizz {
                             template: templatePayload,
                         }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_41 = response) !== null && _41 !== void 0 ? _41 : {},
+                            json: (_42 = response) !== null && _42 !== void 0 ? _42 : {},
                         });
                         continue;
                     }
@@ -2913,17 +2950,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/templates/${templateId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_42 = response) !== null && _42 !== void 0 ? _42 : {},
+                            json: (_43 = response) !== null && _43 !== void 0 ? _43 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_43 = pagination.page) !== null && _43 !== void 0 ? _43 : 1) || 1;
-                        const perPage = Number((_44 = pagination.perPage) !== null && _44 !== void 0 ? _44 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_44 = pagination.page) !== null && _44 !== void 0 ? _44 : 1) || 1;
+                        const perPage = Number((_45 = pagination.perPage) !== null && _45 !== void 0 ? _45 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/templates', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_45 = response) !== null && _45 !== void 0 ? _45 : {},
+                            json: (_46 = response) !== null && _46 !== void 0 ? _46 : {},
                         });
                         continue;
                     }
@@ -2968,7 +3005,7 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/transactional-emails', { transactional_email: transactionalPayload }, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_46 = response) !== null && _46 !== void 0 ? _46 : {},
+                            json: (_47 = response) !== null && _47 !== void 0 ? _47 : {},
                         });
                         continue;
                     }
@@ -2981,17 +3018,17 @@ class Mailwizz {
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/transactional-emails/${emailId}`, {}, {}, {}, itemIndex);
                         returnData.push({
-                            json: (_47 = response) !== null && _47 !== void 0 ? _47 : {},
+                            json: (_48 = response) !== null && _48 !== void 0 ? _48 : {},
                         });
                         continue;
                     }
                     if (operation === 'getAll') {
                         const pagination = this.getNodeParameter('pagination', itemIndex, {});
-                        const page = Number((_48 = pagination.page) !== null && _48 !== void 0 ? _48 : 1) || 1;
-                        const perPage = Number((_49 = pagination.perPage) !== null && _49 !== void 0 ? _49 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
+                        const page = Number((_49 = pagination.page) !== null && _49 !== void 0 ? _49 : 1) || 1;
+                        const perPage = Number((_50 = pagination.perPage) !== null && _50 !== void 0 ? _50 : DEFAULT_ITEMS_PER_PAGE) || DEFAULT_ITEMS_PER_PAGE;
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/transactional-emails', {}, { page, per_page: perPage }, {}, itemIndex);
                         returnData.push({
-                            json: (_50 = response) !== null && _50 !== void 0 ? _50 : {},
+                            json: (_51 = response) !== null && _51 !== void 0 ? _51 : {},
                         });
                         continue;
                     }
