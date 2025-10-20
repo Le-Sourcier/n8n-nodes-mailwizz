@@ -51,7 +51,6 @@ export async function mailwizzApiRequest(
 	const requestOptions: IHttpRequestOptions = {
 		method: methodUpper,
 		url: ensureLeadingSlash(endpoint),
-		json: true,
 		...options,
 	};
 
@@ -67,7 +66,39 @@ export async function mailwizzApiRequest(
 	}
 
 	try {
-		return await this.helpers.httpRequestWithAuthentication.call(this, 'mailwizzApi', requestOptions);
+		const response = await this.helpers.httpRequestWithAuthentication.call(
+			this,
+			'mailwizzApi',
+			requestOptions,
+		);
+
+		if (Buffer.isBuffer(response)) {
+			const decoded = response.toString('utf8');
+			if (!decoded) {
+				return {};
+			}
+
+			try {
+				return JSON.parse(decoded) as IDataObject;
+			} catch {
+				return { raw: decoded };
+			}
+		}
+
+		if (typeof response === 'string') {
+			const trimmed = response.trim();
+			if (trimmed.length === 0) {
+				return {};
+			}
+
+			try {
+				return JSON.parse(trimmed) as IDataObject;
+			} catch {
+				return { raw: response };
+			}
+		}
+
+		return response;
 	} catch (error) {
 		throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex });
 	}

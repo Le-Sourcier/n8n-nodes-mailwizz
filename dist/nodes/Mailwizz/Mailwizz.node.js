@@ -98,6 +98,24 @@ const injectWordPressData = (content, item, subjectField, fields) => {
         return current.replace(pattern, value);
     }, content);
 };
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const ensureComplianceTags = (content) => {
+    const requiredTokens = [
+        { token: '[UNSUBSCRIBE_URL]', html: '<p><a href="[UNSUBSCRIBE_URL]">Se désinscrire</a></p>' },
+        { token: '[COMPANY_FULL_ADDRESS]', html: '<p>[COMPANY_FULL_ADDRESS]</p>' },
+    ];
+    const missingSnippets = requiredTokens
+        .filter(({ token }) => !new RegExp(escapeRegex(token), 'i').test(content))
+        .map(({ html }) => html);
+    if (missingSnippets.length === 0) {
+        return content;
+    }
+    const addition = `\n${missingSnippets.join('\n')}\n`;
+    if (/<\/body>/i.test(content)) {
+        return content.replace(/<\/body>/i, `${addition}</body>`);
+    }
+    return `${content}${addition}`;
+};
 const extractRecords = (payload) => {
     var _a;
     if (!payload) {
@@ -2188,7 +2206,7 @@ class Mailwizz {
                             ? injectWordPressData(providedContent, items[itemIndex].json, wpSubjectField, wpFieldMapping)
                             : providedContent;
                         templateBlock = {
-                            content: finalContent,
+                            content: ensureComplianceTags(finalContent),
                             inline_css: 'no',
                             auto_plain_text: 'yes',
                         };
@@ -2214,7 +2232,7 @@ class Mailwizz {
                         if (passWordPressData && templateContent && wpFieldMapping) {
                             const enrichedContent = injectWordPressData(templateContent, items[itemIndex].json, wpSubjectField, wpFieldMapping);
                             templateBlock = {
-                                content: enrichedContent,
+                                content: ensureComplianceTags(enrichedContent),
                                 inline_css: 'no',
                                 auto_plain_text: 'yes',
                             };

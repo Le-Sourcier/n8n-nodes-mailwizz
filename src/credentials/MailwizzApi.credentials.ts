@@ -226,7 +226,7 @@ export class MailwizzApi implements ICredentialType {
 			: `${normalizedBase}${ensureLeadingSlash(endpoint)}`;
 
 		const headers: IDataObject = {
-			Accept: 'application/json',
+			Accept: 'application/json; charset=UTF-8',
 			...(requestOptions.headers ?? {}),
 			'X-MW-PUBLIC-KEY': publicKey,
 			'X-MW-TIMESTAMP': Math.floor(Date.now() / 1000).toString(),
@@ -237,12 +237,17 @@ export class MailwizzApi implements ICredentialType {
 			? filterUndefined((requestOptions.body as IDataObject) ?? {})
 			: {};
 		const query = filterUndefined((requestOptions.qs as IDataObject) ?? {});
+		const bodyHasContent = methodsWithBody.has(method) && Object.keys(body).length > 0;
+		let serializedBody: string | undefined;
 
-		if (methodsWithBody.has(method) && Object.keys(body).length > 0) {
-			headers['Content-Type'] = 'application/x-www-form-urlencoded';
-			requestOptions.body = body;
+		if (bodyHasContent) {
+			headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+			serializedBody = serialize(body);
+			requestOptions.body = serializedBody;
+			headers['Content-Length'] = Buffer.byteLength(serializedBody, 'utf8').toString();
 		} else {
 			delete requestOptions.body;
+			delete headers['Content-Length'];
 		}
 
 		if (Object.keys(query).length > 0) {
@@ -258,7 +263,11 @@ export class MailwizzApi implements ICredentialType {
 
 		requestOptions.headers = headers;
 		requestOptions.url = resolvedUrl;
-		requestOptions.json = true;
+		if (bodyHasContent) {
+			requestOptions.json = false;
+		} else if (requestOptions.json === undefined) {
+			requestOptions.json = true;
+		}
 
 		if (allowUnauthorizedCerts) {
 			requestOptions.skipSslCertificateValidation = true;

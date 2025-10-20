@@ -31,7 +31,6 @@ async function mailwizzApiRequest(method, endpoint, body = {}, qs = {}, options 
     const requestOptions = {
         method: methodUpper,
         url: ensureLeadingSlash(endpoint),
-        json: true,
         ...options,
     };
     const cleanedBody = filterUndefined(body);
@@ -43,7 +42,32 @@ async function mailwizzApiRequest(method, endpoint, body = {}, qs = {}, options 
         requestOptions.qs = cleanedQuery;
     }
     try {
-        return await this.helpers.httpRequestWithAuthentication.call(this, 'mailwizzApi', requestOptions);
+        const response = await this.helpers.httpRequestWithAuthentication.call(this, 'mailwizzApi', requestOptions);
+        if (Buffer.isBuffer(response)) {
+            const decoded = response.toString('utf8');
+            if (!decoded) {
+                return {};
+            }
+            try {
+                return JSON.parse(decoded);
+            }
+            catch {
+                return { raw: decoded };
+            }
+        }
+        if (typeof response === 'string') {
+            const trimmed = response.trim();
+            if (trimmed.length === 0) {
+                return {};
+            }
+            try {
+                return JSON.parse(trimmed);
+            }
+            catch {
+                return { raw: response };
+            }
+        }
+        return response;
     }
     catch (error) {
         throw new n8n_workflow_1.NodeApiError(this.getNode(), error, { itemIndex });

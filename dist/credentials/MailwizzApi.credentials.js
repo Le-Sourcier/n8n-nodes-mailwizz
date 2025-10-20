@@ -178,7 +178,7 @@ class MailwizzApi {
             ? endpoint
             : `${normalizedBase}${ensureLeadingSlash(endpoint)}`;
         const headers = {
-            Accept: 'application/json',
+            Accept: 'application/json; charset=UTF-8',
             ...((_c = requestOptions.headers) !== null && _c !== void 0 ? _c : {}),
             'X-MW-PUBLIC-KEY': publicKey,
             'X-MW-TIMESTAMP': Math.floor(Date.now() / 1000).toString(),
@@ -188,12 +188,17 @@ class MailwizzApi {
             ? filterUndefined((_f = requestOptions.body) !== null && _f !== void 0 ? _f : {})
             : {};
         const query = filterUndefined((_g = requestOptions.qs) !== null && _g !== void 0 ? _g : {});
-        if (methodsWithBody.has(method) && Object.keys(body).length > 0) {
-            headers['Content-Type'] = 'application/x-www-form-urlencoded';
-            requestOptions.body = body;
+        const bodyHasContent = methodsWithBody.has(method) && Object.keys(body).length > 0;
+        let serializedBody;
+        if (bodyHasContent) {
+            headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+            serializedBody = serialize(body);
+            requestOptions.body = serializedBody;
+            headers['Content-Length'] = Buffer.byteLength(serializedBody, 'utf8').toString();
         }
         else {
             delete requestOptions.body;
+            delete headers['Content-Length'];
         }
         if (Object.keys(query).length > 0) {
             requestOptions.qs = query;
@@ -206,7 +211,12 @@ class MailwizzApi {
         headers['X-HTTP-Method-Override'] = method;
         requestOptions.headers = headers;
         requestOptions.url = resolvedUrl;
-        requestOptions.json = true;
+        if (bodyHasContent) {
+            requestOptions.json = false;
+        }
+        else if (requestOptions.json === undefined) {
+            requestOptions.json = true;
+        }
         if (allowUnauthorizedCerts) {
             requestOptions.skipSslCertificateValidation = true;
         }

@@ -146,6 +146,31 @@ const injectWordPressData = (
 	}, content);
 };
 
+const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const ensureComplianceTags = (content: string): string => {
+	const requiredTokens: Array<{ token: string; html: string }> = [
+		{ token: '[UNSUBSCRIBE_URL]', html: '<p><a href="[UNSUBSCRIBE_URL]">Se désinscrire</a></p>' },
+		{ token: '[COMPANY_FULL_ADDRESS]', html: '<p>[COMPANY_FULL_ADDRESS]</p>' },
+	];
+
+	const missingSnippets = requiredTokens
+		.filter(({ token }) => !new RegExp(escapeRegex(token), 'i').test(content))
+		.map(({ html }) => html);
+
+	if (missingSnippets.length === 0) {
+		return content;
+	}
+
+	const addition = `\n${missingSnippets.join('\n')}\n`;
+
+	if (/<\/body>/i.test(content)) {
+		return content.replace(/<\/body>/i, `${addition}</body>`);
+	}
+
+	return `${content}${addition}`;
+};
+
 const extractRecords = (payload: IDataObject | undefined): IDataObject[] => {
 	if (!payload) {
 		return [];
@@ -2309,7 +2334,7 @@ export class Mailwizz implements INodeType {
 								: providedContent;
 
 						templateBlock = {
-							content: finalContent,
+							content: ensureComplianceTags(finalContent),
 							inline_css: 'no',
 							auto_plain_text: 'yes',
 						};
@@ -2355,7 +2380,7 @@ export class Mailwizz implements INodeType {
 							);
 
 							templateBlock = {
-								content: enrichedContent,
+								content: ensureComplianceTags(enrichedContent),
 								inline_css: 'no',
 								auto_plain_text: 'yes',
 							};
