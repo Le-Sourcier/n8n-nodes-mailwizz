@@ -2913,9 +2913,10 @@ class Mailwizz {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Template name and content are required.', { itemIndex });
                         }
                         const additionalFields = this.getNodeParameter('templateAdditionalFields', itemIndex, {});
+                        const ensuredContent = ensureComplianceTags(templateContent);
                         const templatePayload = {
                             name: templateName,
-                            content: templateContent,
+                            content: ensuredContent,
                         };
                         const plainText = asString(additionalFields.plainText);
                         if (plainText) {

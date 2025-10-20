@@ -3445,9 +3445,11 @@ export class Mailwizz implements INodeType {
 							{},
 						) as IDataObject;
 
+						const ensuredContent = ensureComplianceTags(templateContent);
+
 						const templatePayload: IDataObject = {
 							name: templateName,
-							content: templateContent,
+							content: ensuredContent,
 						};
 
 						const plainText = asString(additionalFields.plainText);
