@@ -29,6 +29,7 @@ interface WordPressFieldMapping {
 
 const DEFAULT_ITEMS_PER_PAGE = 50;
 const LOAD_OPTIONS_LIMIT = 100;
+const LIST_SEARCH_MAX_PAGES = 10;
 
 const isRecord = (value: unknown): value is IDataObject =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -2235,6 +2236,135 @@ export class Mailwizz implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
+		const listLookupCache = new Map<string, string>();
+		const normaliseKey = (value: string) => value.trim().toLowerCase();
+
+		const resolveListUid = async (identifier: string, itemIndex: number): Promise<string> => {
+			const trimmed = identifier.trim();
+			if (!trimmed) {
+				return trimmed;
+			}
+
+			const targetKey = normaliseKey(trimmed);
+			const cached = listLookupCache.get(targetKey);
+			if (cached) {
+				return cached;
+			}
+
+			const registerRecord = (record: IDataObject) => {
+				const general = isRecord(record.general) ? (record.general as IDataObject) : undefined;
+				const listUid =
+					asString(general?.list_uid) ?? asString(record.list_uid) ?? asString(record.uid) ?? undefined;
+				if (!listUid) {
+					return;
+				}
+
+				const names = [
+					listUid,
+					asString(general?.name),
+					asString(general?.display_name),
+					asString(record.name),
+					asString(record.display_name),
+					asString(record.short_name),
+				].filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
+
+				for (const name of names) {
+					listLookupCache.set(normaliseKey(name), listUid);
+				}
+			};
+
+			const attemptDirectMatch = async () => {
+				try {
+					const response = (await mailwizzApiRequest.call(
+						this,
+						'GET',
+						`/lists/${trimmed}`,
+						{},
+						{},
+						{},
+						itemIndex,
+					)) as IDataObject;
+
+					const records = extractRecords(response);
+					if (records.length > 0) {
+						for (const record of records) {
+							registerRecord(record);
+						}
+					} else if (isRecord(response)) {
+						registerRecord(response);
+					}
+
+					listLookupCache.set(targetKey, trimmed);
+					return trimmed;
+				} catch (error) {
+					if (error instanceof NodeApiError && error.httpCode === '404') {
+						return undefined;
+					}
+					throw error;
+				}
+			};
+
+			const directMatch = await attemptDirectMatch();
+			if (directMatch) {
+				return directMatch;
+			}
+
+			let page = 1;
+			while (page <= LIST_SEARCH_MAX_PAGES) {
+				const response = (await mailwizzApiRequest.call(
+					this,
+					'GET',
+					'/lists',
+					{},
+					{ page, per_page: LOAD_OPTIONS_LIMIT },
+					{},
+					itemIndex,
+				)) as IDataObject;
+
+				const records = extractRecords(response);
+				if (records.length === 0) {
+					break;
+				}
+
+				let matchedUid: string | undefined;
+
+				for (const record of records) {
+					registerRecord(record);
+					const general = isRecord(record.general) ? (record.general as IDataObject) : undefined;
+					const listUid =
+						asString(general?.list_uid) ?? asString(record.list_uid) ?? asString(record.uid) ?? undefined;
+					if (!listUid) {
+						continue;
+					}
+
+					const candidates = [
+						listUid,
+						asString(general?.name),
+						asString(general?.display_name),
+						asString(record.name),
+						asString(record.display_name),
+						asString(record.short_name),
+					].filter((entry): entry is string => typeof entry === 'string');
+
+					if (candidates.some((entry) => normaliseKey(entry) === targetKey)) {
+						matchedUid = listUid;
+						break;
+					}
+				}
+
+				if (matchedUid) {
+					return matchedUid;
+				}
+
+				if (records.length < LOAD_OPTIONS_LIMIT) {
+					break;
+				}
+
+				page += 1;
+			}
+
+			throw new NodeOperationError(this.getNode(), `List "${trimmed}" was not found.`, { itemIndex });
+		};
 
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
@@ -2293,10 +2423,12 @@ export class Mailwizz implements INodeType {
 						const sourceCategories = items[itemIndex].json[wpCategoriesField];
 						const match = pickFirstMatch(sourceCategories, mappings);
 
-						listUid = match?.mwListId ?? defaultList;
+						const selectedListId = match?.mwListId ?? defaultList;
+						listUid = await resolveListUid(selectedListId, itemIndex);
 						segmentUid = match?.mwSegmentId ?? defaultSegment ?? '';
 					} else {
-						listUid = ensureString(this.getNodeParameter('listId', itemIndex));
+						const providedListId = ensureString(this.getNodeParameter('listId', itemIndex));
+						listUid = await resolveListUid(providedListId, itemIndex);
 						segmentUid = asString(this.getNodeParameter('segmentId', itemIndex, '')) ?? '';
 					}
 

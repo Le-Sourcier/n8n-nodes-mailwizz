@@ -5,6 +5,7 @@ const n8n_workflow_1 = require("n8n-workflow");
 const GenericFunctions_1 = require("./GenericFunctions");
 const DEFAULT_ITEMS_PER_PAGE = 50;
 const LOAD_OPTIONS_LIMIT = 100;
+const LIST_SEARCH_MAX_PAGES = 10;
 const isRecord = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
 const toRecordArray = (value) => {
     if (!Array.isArray(value)) {
@@ -2135,6 +2136,102 @@ class Mailwizz {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51;
         const items = this.getInputData();
         const returnData = [];
+        const listLookupCache = new Map();
+        const normaliseKey = (value) => value.trim().toLowerCase();
+        const resolveListUid = async (identifier, itemIndex) => {
+            var _a, _b, _c;
+            const trimmed = identifier.trim();
+            if (!trimmed) {
+                return trimmed;
+            }
+            const targetKey = normaliseKey(trimmed);
+            const cached = listLookupCache.get(targetKey);
+            if (cached) {
+                return cached;
+            }
+            const registerRecord = (record) => {
+                var _a, _b, _c;
+                const general = isRecord(record.general) ? record.general : undefined;
+                const listUid = (_c = (_b = (_a = asString(general === null || general === void 0 ? void 0 : general.list_uid)) !== null && _a !== void 0 ? _a : asString(record.list_uid)) !== null && _b !== void 0 ? _b : asString(record.uid)) !== null && _c !== void 0 ? _c : undefined;
+                if (!listUid) {
+                    return;
+                }
+                const names = [
+                    listUid,
+                    asString(general === null || general === void 0 ? void 0 : general.name),
+                    asString(general === null || general === void 0 ? void 0 : general.display_name),
+                    asString(record.name),
+                    asString(record.display_name),
+                    asString(record.short_name),
+                ].filter((entry) => typeof entry === 'string' && entry.trim().length > 0);
+                for (const name of names) {
+                    listLookupCache.set(normaliseKey(name), listUid);
+                }
+            };
+            const attemptDirectMatch = async () => {
+                try {
+                    const response = (await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', `/lists/${trimmed}`, {}, {}, {}, itemIndex));
+                    const records = extractRecords(response);
+                    if (records.length > 0) {
+                        for (const record of records) {
+                            registerRecord(record);
+                        }
+                    }
+                    else if (isRecord(response)) {
+                        registerRecord(response);
+                    }
+                    listLookupCache.set(targetKey, trimmed);
+                    return trimmed;
+                }
+                catch (error) {
+                    if (error instanceof n8n_workflow_1.NodeApiError && error.httpCode === '404') {
+                        return undefined;
+                    }
+                    throw error;
+                }
+            };
+            const directMatch = await attemptDirectMatch();
+            if (directMatch) {
+                return directMatch;
+            }
+            let page = 1;
+            while (page <= LIST_SEARCH_MAX_PAGES) {
+                const response = (await GenericFunctions_1.mailwizzApiRequest.call(this, 'GET', '/lists', {}, { page, per_page: LOAD_OPTIONS_LIMIT }, {}, itemIndex));
+                const records = extractRecords(response);
+                if (records.length === 0) {
+                    break;
+                }
+                let matchedUid;
+                for (const record of records) {
+                    registerRecord(record);
+                    const general = isRecord(record.general) ? record.general : undefined;
+                    const listUid = (_c = (_b = (_a = asString(general === null || general === void 0 ? void 0 : general.list_uid)) !== null && _a !== void 0 ? _a : asString(record.list_uid)) !== null && _b !== void 0 ? _b : asString(record.uid)) !== null && _c !== void 0 ? _c : undefined;
+                    if (!listUid) {
+                        continue;
+                    }
+                    const candidates = [
+                        listUid,
+                        asString(general === null || general === void 0 ? void 0 : general.name),
+                        asString(general === null || general === void 0 ? void 0 : general.display_name),
+                        asString(record.name),
+                        asString(record.display_name),
+                        asString(record.short_name),
+                    ].filter((entry) => typeof entry === 'string');
+                    if (candidates.some((entry) => normaliseKey(entry) === targetKey)) {
+                        matchedUid = listUid;
+                        break;
+                    }
+                }
+                if (matchedUid) {
+                    return matchedUid;
+                }
+                if (records.length < LOAD_OPTIONS_LIMIT) {
+                    break;
+                }
+                page += 1;
+            }
+            throw new n8n_workflow_1.NodeOperationError(this.getNode(), `List "${trimmed}" was not found.`, { itemIndex });
+        };
         for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
             try {
                 const resource = this.getNodeParameter('resource', itemIndex);
@@ -2179,11 +2276,13 @@ class Mailwizz {
                             .filter((entry) => entry.wpCategory && entry.mwListId);
                         const sourceCategories = items[itemIndex].json[wpCategoriesField];
                         const match = pickFirstMatch(sourceCategories, mappings);
-                        listUid = (_a = match === null || match === void 0 ? void 0 : match.mwListId) !== null && _a !== void 0 ? _a : defaultList;
+                        const selectedListId = (_a = match === null || match === void 0 ? void 0 : match.mwListId) !== null && _a !== void 0 ? _a : defaultList;
+                        listUid = await resolveListUid(selectedListId, itemIndex);
                         segmentUid = (_c = (_b = match === null || match === void 0 ? void 0 : match.mwSegmentId) !== null && _b !== void 0 ? _b : defaultSegment) !== null && _c !== void 0 ? _c : '';
                     }
                     else {
-                        listUid = ensureString(this.getNodeParameter('listId', itemIndex));
+                        const providedListId = ensureString(this.getNodeParameter('listId', itemIndex));
+                        listUid = await resolveListUid(providedListId, itemIndex);
                         segmentUid = (_d = asString(this.getNodeParameter('segmentId', itemIndex, ''))) !== null && _d !== void 0 ? _d : '';
                     }
                     if (!listUid) {
