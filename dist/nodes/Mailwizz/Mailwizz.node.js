@@ -2170,20 +2170,18 @@ class Mailwizz {
                             itemIndex,
                         });
                     }
-                    const generalPayload = {
+                    const campaignPayload = {
                         name,
                         type,
+                        list_uid: listUid,
                         from_name: fromName,
                         from_email: fromEmail,
                         reply_to: replyTo,
                         subject,
                         send_at: normaliseDate(sendAt),
                     };
-                    const recipientsPayload = {
-                        list_uid: listUid,
-                    };
                     if (segmentUid) {
-                        recipientsPayload.segment_uid = segmentUid;
+                        campaignPayload.segment_uid = segmentUid;
                     }
                     const optionsPayload = {
                         url_tracking: urlTracking,
@@ -2280,12 +2278,8 @@ class Mailwizz {
                             }
                         }
                     }
-                    const campaignPayload = {
-                        general: generalPayload,
-                        recipients: recipientsPayload,
-                        options: optionsPayload,
-                        template: templateBlock,
-                    };
+                    campaignPayload.options = optionsPayload;
+                    campaignPayload.template = templateBlock;
                     const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', '/campaigns', {
                         campaign: campaignPayload,
                     }, {}, {}, itemIndex);

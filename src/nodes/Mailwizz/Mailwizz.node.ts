@@ -2281,22 +2281,18 @@ export class Mailwizz implements INodeType {
 						});
 					}
 
-					const generalPayload: IDataObject = {
+					const campaignPayload: IDataObject = {
 						name,
 						type,
+						list_uid: listUid,
 						from_name: fromName,
 						from_email: fromEmail,
 						reply_to: replyTo,
 						subject,
 						send_at: normaliseDate(sendAt),
 					};
-
-					const recipientsPayload: IDataObject = {
-						list_uid: listUid,
-					};
-
 					if (segmentUid) {
-						recipientsPayload.segment_uid = segmentUid;
+						campaignPayload.segment_uid = segmentUid;
 					}
 
 					const optionsPayload: IDataObject = {
@@ -2453,12 +2449,8 @@ export class Mailwizz implements INodeType {
 						}
 					}
 
-					const campaignPayload: IDataObject = {
-						general: generalPayload,
-						recipients: recipientsPayload,
-						options: optionsPayload,
-						template: templateBlock,
-					};
+					campaignPayload.options = optionsPayload;
+					campaignPayload.template = templateBlock;
 
 					const response = await mailwizzApiRequest.call(
 						this,
