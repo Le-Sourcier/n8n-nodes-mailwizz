@@ -1171,6 +1171,50 @@ export class Mailwizz implements INodeType {
 			},
 			description: 'Status to apply to subscribers if not explicitly provided in the payload',
 		},
+		{
+			displayName: 'Metadata',
+			name: 'subscriberMetadataBulk',
+			type: 'collection',
+			default: {},
+			displayOptions: {
+				show: {
+					resource: ['subscriber'],
+					operation: ['createBulk'],
+				},
+			},
+			options: [
+				{
+					displayName: 'Confirmation IP',
+					name: 'confirmIp',
+					type: 'string',
+					default: '',
+				},
+				{
+					displayName: 'Opt-in IP',
+					name: 'optinIp',
+					type: 'string',
+					default: '',
+				},
+				{
+					displayName: 'Registration IP',
+					name: 'registrationIp',
+					type: 'string',
+					default: '',
+				},
+				{
+					displayName: 'Timestamp',
+					name: 'timestamp',
+					type: 'dateTime',
+					default: '',
+				},
+				{
+					displayName: 'Source',
+					name: 'source',
+					type: 'string',
+					default: '',
+				},
+			],
+		},
 			{
 				displayName: 'Subscriber ID',
 				name: 'subscriberId',
@@ -1229,6 +1273,55 @@ export class Mailwizz implements INodeType {
 				},
 			},
 			description: 'Desired MailWizz status for the subscriber',
+		},
+		{
+			displayName: 'Metadata',
+			name: 'subscriberMetadata',
+			type: 'collection',
+			default: {},
+			displayOptions: {
+				show: {
+					resource: ['subscriber'],
+					operation: ['create'],
+				},
+			},
+			options: [
+				{
+					displayName: 'Confirmation IP',
+					name: 'confirmIp',
+					type: 'string',
+					default: '',
+					description: 'IP address recorded when confirming the subscriber',
+				},
+				{
+					displayName: 'Opt-in IP',
+					name: 'optinIp',
+					type: 'string',
+					default: '',
+					description: 'IP address recorded when opting in the subscriber',
+				},
+				{
+					displayName: 'Registration IP',
+					name: 'registrationIp',
+					type: 'string',
+					default: '',
+					description: 'IP address recorded at subscription time',
+				},
+				{
+					displayName: 'Timestamp',
+					name: 'timestamp',
+					type: 'dateTime',
+					default: '',
+					description: 'Timestamp of the subscription event',
+				},
+				{
+					displayName: 'Source',
+					name: 'source',
+					type: 'string',
+					default: '',
+					description: 'Origin of the subscription, e.g. api, website_form',
+				},
+			],
 		},
 			{
 				displayName: 'New Subscriber Email',
@@ -3196,6 +3289,30 @@ export class Mailwizz implements INodeType {
 					}
 				}
 
+				const metadataDefaults = this.getNodeParameter('subscriberMetadataBulk', itemIndex, {}) as IDataObject;
+				const confirmIpDefault = asString(metadataDefaults.confirmIp);
+				const optinIpDefault = asString(metadataDefaults.optinIp);
+				const registrationIpDefault = asString(metadataDefaults.registrationIp);
+				const timestampDefault = asString(metadataDefaults.timestamp);
+				const sourceDefault = asString(metadataDefaults.source);
+
+				if (
+					confirmIpDefault ||
+					optinIpDefault ||
+					registrationIpDefault ||
+					timestampDefault ||
+					sourceDefault
+				) {
+					for (const entry of subscribersPayload) {
+						if (confirmIpDefault && entry.confirm_ip === undefined) entry.confirm_ip = confirmIpDefault;
+						if (optinIpDefault && entry.optin_ip === undefined) entry.optin_ip = optinIpDefault;
+						if (registrationIpDefault && entry.ip_address === undefined)
+							entry.ip_address = registrationIpDefault;
+						if (timestampDefault && entry.timestamp === undefined) entry.timestamp = timestampDefault;
+						if (sourceDefault && entry.source === undefined) entry.source = sourceDefault;
+					}
+				}
+
 						const response = await mailwizzApiRequest.call(
 							this,
 							'POST',
@@ -3230,6 +3347,18 @@ export class Mailwizz implements INodeType {
 				if (subscriberStatus) {
 					payload.status = subscriberStatus;
 				}
+
+				const metadata = this.getNodeParameter('subscriberMetadata', itemIndex, {}) as IDataObject;
+				const confirmIp = asString(metadata.confirmIp);
+				if (confirmIp) payload.confirm_ip = confirmIp;
+				const optinIp = asString(metadata.optinIp);
+				if (optinIp) payload.optin_ip = optinIp;
+				const registrationIp = asString(metadata.registrationIp);
+				if (registrationIp) payload.ip_address = registrationIp;
+				const timestamp = asString(metadata.timestamp);
+				if (timestamp) payload.timestamp = timestamp;
+				const source = asString(metadata.source);
+				if (source) payload.source = source;
 
 						const response = await mailwizzApiRequest.call(
 							this,

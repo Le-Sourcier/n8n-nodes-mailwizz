@@ -18,7 +18,7 @@ If you're running n8n in a Cloudron environment, you'll need to add the node to 
    - Add or modify the following lines:
    ```bash
    # Add n8n-nodes-mailwizz-ls to the list of modules
-   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.1.11"
+   export EXTRA_NODE_MODULES="n8n-nodes-mailwizz-ls@2.1.12"
    
    # Add mailwizz to the list of allowed external modules
    export NODE_FUNCTION_ALLOW_EXTERNAL="n8n-nodes-mailwizz-ls"
@@ -37,7 +37,7 @@ If you're running n8n in a standard environment:
 1. **Install the Node**
    - Run the following command in your n8n installation directory:
    ```bash
-   npm install n8n-nodes-mailwizz-ls@2.1.11
+   npm install n8n-nodes-mailwizz-ls@2.1.12
    ```
 
 2. **Restart n8n**
