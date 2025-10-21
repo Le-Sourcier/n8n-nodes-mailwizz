@@ -1123,23 +1123,54 @@ export class Mailwizz implements INodeType {
 					},
 					description: 'Identifier of the list that the subscribers will be added to',
 			},
-			{
-				displayName: 'Subscribers',
-				name: 'subscribers',
-				type: 'json',
-				typeOptions: {
-					alwaysOpenEditWindow: true,
-				},
-				default: '={{$json["subscribers"]}}',
-				displayOptions: {
-					show: {
-						resource: ['subscriber'],
-						operation: ['createBulk'],
-					},
-				},
-				required: true,
-				description: 'JSON array of subscriber objects to create in MailWizz',
+		{
+			displayName: 'Subscribers',
+			name: 'subscribers',
+			type: 'json',
+			typeOptions: {
+				alwaysOpenEditWindow: true,
 			},
+			default: '={{$json["subscribers"]}}',
+			displayOptions: {
+				show: {
+					resource: ['subscriber'],
+					operation: ['createBulk'],
+				},
+			},
+			required: true,
+			description: 'JSON array of subscriber objects to create in MailWizz',
+		},
+		{
+			displayName: 'Subscriber Status',
+			name: 'subscriberStatusBulk',
+			type: 'options',
+			options: [
+				{
+					name: 'Confirmed',
+					value: 'confirmed',
+				},
+				{
+					name: 'Unconfirmed',
+					value: 'unconfirmed',
+				},
+				{
+					name: 'Unsubscribed',
+					value: 'unsubscribed',
+				},
+				{
+					name: 'Blacklisted',
+					value: 'blacklisted',
+				},
+			],
+			default: 'confirmed',
+			displayOptions: {
+				show: {
+					resource: ['subscriber'],
+					operation: ['createBulk'],
+				},
+			},
+			description: 'Status to apply to subscribers if not explicitly provided in the payload',
+		},
 			{
 				displayName: 'Subscriber ID',
 				name: 'subscriberId',
@@ -1154,20 +1185,51 @@ export class Mailwizz implements INodeType {
 				},
 				description: 'Unique identifier of the subscriber in MailWizz',
 			},
-			{
-				displayName: 'Subscriber Email',
-				name: 'subscriberEmail',
-				type: 'string',
-				required: true,
-				default: '={{$json["EMAIL"]}}',
-				displayOptions: {
-					show: {
-						resource: ['subscriber'],
-						operation: ['create', 'updateByEmail', 'unsubscribeByEmail'],
-					},
+		{
+			displayName: 'Subscriber Email',
+			name: 'subscriberEmail',
+			type: 'string',
+			required: true,
+			default: '={{$json["EMAIL"]}}',
+			displayOptions: {
+				show: {
+					resource: ['subscriber'],
+					operation: ['create', 'updateByEmail', 'unsubscribeByEmail'],
 				},
-				description: 'Email address of the subscriber',
 			},
+			description: 'Email address of the subscriber',
+		},
+		{
+			displayName: 'Subscriber Status',
+			name: 'subscriberStatus',
+			type: 'options',
+			options: [
+				{
+					name: 'Confirmed',
+					value: 'confirmed',
+				},
+				{
+					name: 'Unconfirmed',
+					value: 'unconfirmed',
+				},
+				{
+					name: 'Unsubscribed',
+					value: 'unsubscribed',
+				},
+				{
+					name: 'Blacklisted',
+					value: 'blacklisted',
+				},
+			],
+			default: 'confirmed',
+			displayOptions: {
+				show: {
+					resource: ['subscriber'],
+					operation: ['create', 'update', 'updateByEmail'],
+				},
+			},
+			description: 'Desired MailWizz status for the subscriber',
+		},
 			{
 				displayName: 'New Subscriber Email',
 				name: 'newSubscriberEmail',
@@ -3115,15 +3177,24 @@ export class Mailwizz implements INodeType {
 							return [];
 						};
 
-						const subscribersPayload = resolveSubscribers(rawSubscribers);
+				const subscribersPayload = resolveSubscribers(rawSubscribers);
 
-						if (subscribersPayload.length === 0) {
-							throw new NodeOperationError(
-								this.getNode(),
-								'Provide at least one subscriber in the subscribers parameter.',
-								{ itemIndex },
-							);
+				if (subscribersPayload.length === 0) {
+					throw new NodeOperationError(
+						this.getNode(),
+						'Provide at least one subscriber in the subscribers parameter.',
+						{ itemIndex },
+					);
+				}
+
+				const defaultStatus = this.getNodeParameter('subscriberStatusBulk', itemIndex, 'confirmed') as string;
+				if (defaultStatus) {
+					for (const entry of subscribersPayload) {
+						if (entry.status === undefined && (entry as IDataObject).STATUS === undefined) {
+							entry.status = defaultStatus;
 						}
+					}
+				}
 
 						const response = await mailwizzApiRequest.call(
 							this,
@@ -3147,13 +3218,18 @@ export class Mailwizz implements INodeType {
 							throw new NodeOperationError(this.getNode(), 'Subscriber email is required.', { itemIndex });
 						}
 
-						const payload = buildSubscriberData(subscriberEmail);
+				const payload = buildSubscriberData(subscriberEmail);
 
-						if (!asString(payload.EMAIL)) {
-							throw new NodeOperationError(this.getNode(), 'Subscriber email is required.', {
-								itemIndex,
-							});
-						}
+				if (!asString(payload.EMAIL)) {
+					throw new NodeOperationError(this.getNode(), 'Subscriber email is required.', {
+						itemIndex,
+					});
+				}
+
+				const subscriberStatus = this.getNodeParameter('subscriberStatus', itemIndex, 'confirmed') as string;
+				if (subscriberStatus) {
+					payload.status = subscriberStatus;
+				}
 
 						const response = await mailwizzApiRequest.call(
 							this,
@@ -3235,7 +3311,12 @@ export class Mailwizz implements INodeType {
 						}
 
 						const newEmail = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))?.trim();
-						const payload = buildSubscriberData(undefined, newEmail);
+				const payload = buildSubscriberData(undefined, newEmail);
+
+				const subscriberStatus = this.getNodeParameter('subscriberStatus', itemIndex, '') as string;
+				if (subscriberStatus) {
+					payload.status = subscriberStatus;
+				}
 
 						if (Object.keys(payload).length === 0) {
 							throw new NodeOperationError(
@@ -3279,7 +3360,12 @@ export class Mailwizz implements INodeType {
 						}
 
 						const newEmail = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))?.trim();
-						const payload = buildSubscriberData(undefined, newEmail);
+				const payload = buildSubscriberData(undefined, newEmail);
+
+				const subscriberStatus = this.getNodeParameter('subscriberStatus', itemIndex, '') as string;
+				if (subscriberStatus) {
+					payload.status = subscriberStatus;
+				}
 
 						if (Object.keys(payload).length === 0) {
 							throw new NodeOperationError(

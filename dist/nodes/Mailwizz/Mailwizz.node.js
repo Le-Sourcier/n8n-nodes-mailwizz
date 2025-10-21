@@ -1066,6 +1066,37 @@ class Mailwizz {
                     description: 'JSON array of subscriber objects to create in MailWizz',
                 },
                 {
+                    displayName: 'Subscriber Status',
+                    name: 'subscriberStatusBulk',
+                    type: 'options',
+                    options: [
+                        {
+                            name: 'Confirmed',
+                            value: 'confirmed',
+                        },
+                        {
+                            name: 'Unconfirmed',
+                            value: 'unconfirmed',
+                        },
+                        {
+                            name: 'Unsubscribed',
+                            value: 'unsubscribed',
+                        },
+                        {
+                            name: 'Blacklisted',
+                            value: 'blacklisted',
+                        },
+                    ],
+                    default: 'confirmed',
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['createBulk'],
+                        },
+                    },
+                    description: 'Status to apply to subscribers if not explicitly provided in the payload',
+                },
+                {
                     displayName: 'Subscriber ID',
                     name: 'subscriberId',
                     type: 'string',
@@ -1092,6 +1123,37 @@ class Mailwizz {
                         },
                     },
                     description: 'Email address of the subscriber',
+                },
+                {
+                    displayName: 'Subscriber Status',
+                    name: 'subscriberStatus',
+                    type: 'options',
+                    options: [
+                        {
+                            name: 'Confirmed',
+                            value: 'confirmed',
+                        },
+                        {
+                            name: 'Unconfirmed',
+                            value: 'unconfirmed',
+                        },
+                        {
+                            name: 'Unsubscribed',
+                            value: 'unsubscribed',
+                        },
+                        {
+                            name: 'Blacklisted',
+                            value: 'blacklisted',
+                        },
+                    ],
+                    default: 'confirmed',
+                    displayOptions: {
+                        show: {
+                            resource: ['subscriber'],
+                            operation: ['create', 'update', 'updateByEmail'],
+                        },
+                    },
+                    description: 'Desired MailWizz status for the subscriber',
                 },
                 {
                     displayName: 'New Subscriber Email',
@@ -2760,6 +2822,14 @@ class Mailwizz {
                         if (subscribersPayload.length === 0) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide at least one subscriber in the subscribers parameter.', { itemIndex });
                         }
+                        const defaultStatus = this.getNodeParameter('subscriberStatusBulk', itemIndex, 'confirmed');
+                        if (defaultStatus) {
+                            for (const entry of subscribersPayload) {
+                                if (entry.status === undefined && entry.STATUS === undefined) {
+                                    entry.status = defaultStatus;
+                                }
+                            }
+                        }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers/bulk`, { subscribers: subscribersPayload }, {}, {}, itemIndex);
                         returnData.push({
                             json: (_18 = response) !== null && _18 !== void 0 ? _18 : {},
@@ -2776,6 +2846,10 @@ class Mailwizz {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Subscriber email is required.', {
                                 itemIndex,
                             });
+                        }
+                        const subscriberStatus = this.getNodeParameter('subscriberStatus', itemIndex, 'confirmed');
+                        if (subscriberStatus) {
+                            payload.status = subscriberStatus;
                         }
                         const response = await GenericFunctions_1.mailwizzApiRequest.call(this, 'POST', `/lists/${listId}/subscribers`, { data: payload }, {}, {}, itemIndex);
                         returnData.push({
@@ -2824,6 +2898,10 @@ class Mailwizz {
                         }
                         const newEmail = (_24 = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))) === null || _24 === void 0 ? void 0 : _24.trim();
                         const payload = buildSubscriberData(undefined, newEmail);
+                        const subscriberStatus = this.getNodeParameter('subscriberStatus', itemIndex, '');
+                        if (subscriberStatus) {
+                            payload.status = subscriberStatus;
+                        }
                         if (Object.keys(payload).length === 0) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide at least one field to update for the subscriber.', { itemIndex });
                         }
@@ -2845,6 +2923,10 @@ class Mailwizz {
                         }
                         const newEmail = (_27 = asString(this.getNodeParameter('newSubscriberEmail', itemIndex, ''))) === null || _27 === void 0 ? void 0 : _27.trim();
                         const payload = buildSubscriberData(undefined, newEmail);
+                        const subscriberStatus = this.getNodeParameter('subscriberStatus', itemIndex, '');
+                        if (subscriberStatus) {
+                            payload.status = subscriberStatus;
+                        }
                         if (Object.keys(payload).length === 0) {
                             throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Provide at least one field to update for the subscriber.', { itemIndex });
                         }
