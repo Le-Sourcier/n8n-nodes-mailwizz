@@ -1172,6 +1172,19 @@ export class Mailwizz implements INodeType {
 			description: 'Status to apply to subscribers if not explicitly provided in the payload',
 		},
 		{
+			displayName: 'Force Confirm',
+			name: 'forceConfirmBulk',
+			type: 'boolean',
+			default: true,
+			displayOptions: {
+				show: {
+					resource: ['subscriber'],
+					operation: ['createBulk'],
+				},
+			},
+			description: 'Confirm each subscriber after bulk creation when status is set to confirmed',
+		},
+		{
 			displayName: 'Metadata',
 			name: 'subscriberMetadataBulk',
 			type: 'collection',
@@ -1273,6 +1286,19 @@ export class Mailwizz implements INodeType {
 				},
 			},
 			description: 'Desired MailWizz status for the subscriber',
+		},
+		{
+			displayName: 'Force Confirm',
+			name: 'forceConfirm',
+			type: 'boolean',
+			default: true,
+			displayOptions: {
+				show: {
+					resource: ['subscriber'],
+					operation: ['create'],
+				},
+			},
+			description: 'Automatically confirm the subscriber after creation to bypass double opt-in',
 		},
 		{
 			displayName: 'Metadata',
@@ -3212,28 +3238,40 @@ export class Mailwizz implements INodeType {
 						return data;
 					};
 
-					const findSubscriberByEmail = async (email: string): Promise<IDataObject> => {
-						const response = await mailwizzApiRequest.call(
-							this,
-							'GET',
-							`/lists/${listId}/subscribers/search-by-email`,
-							{},
-							{ EMAIL: email },
-							{},
-							itemIndex,
-						);
+			const findSubscriberByEmail = async (email: string): Promise<IDataObject> => {
+				const response = await mailwizzApiRequest.call(
+					this,
+					'GET',
+					`/lists/${listId}/subscribers/search-by-email`,
+					{},
+					{ EMAIL: email },
+					{},
+					itemIndex,
+				);
 
-						const record = getFirstRecord(response as IDataObject);
-						if (!isRecord(record)) {
-							throw new NodeOperationError(
-								this.getNode(),
-								`Subscriber with email "${email}" was not found in the list.`,
-								{ itemIndex },
-							);
-						}
+				const record = getFirstRecord(response as IDataObject);
+				if (!isRecord(record)) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Subscriber with email "${email}" was not found in the list.`,
+						{ itemIndex },
+					);
+				}
 
-						return record;
-					};
+				return record;
+			};
+
+			const confirmSubscriberByUid = async (subscriberUid: string): Promise<void> => {
+				await mailwizzApiRequest.call(
+					this,
+					'PUT',
+					`/lists/${listId}/subscribers/${subscriberUid}/confirm`,
+					{},
+					{},
+					{},
+					itemIndex,
+				);
+			};
 
 					if (operation === 'createBulk') {
 						const rawSubscribers = this.getNodeParameter('subscribers', itemIndex);
@@ -3313,21 +3351,43 @@ export class Mailwizz implements INodeType {
 					}
 				}
 
-						const response = await mailwizzApiRequest.call(
-							this,
-							'POST',
-							`/lists/${listId}/subscribers/bulk`,
-							{ subscribers: subscribersPayload },
-							{},
-							{},
-							itemIndex,
-						);
+				const response = await mailwizzApiRequest.call(
+					this,
+					'POST',
+					`/lists/${listId}/subscribers/bulk`,
+					{ subscribers: subscribersPayload },
+					{},
+					{},
+					itemIndex,
+				);
 
-						returnData.push({
-							json: (response as IDataObject) ?? {},
-						});
-						continue;
+				const forceConfirmBulk = this.getNodeParameter('forceConfirmBulk', itemIndex, true) as boolean;
+				if (forceConfirmBulk && defaultStatus === 'confirmed') {
+					for (const entry of subscribersPayload) {
+						const emailCandidate = asString(entry.EMAIL ?? entry.email ?? entry.Email);
+						if (!emailCandidate) {
+							continue;
+						}
+						try {
+							const record = await findSubscriberByEmail(emailCandidate);
+							const subscriberUid = asString(record.subscriber_uid) ?? asString(record.uid);
+							const currentStatus = asString(record.status ?? record.STATUS) ?? '';
+							if (subscriberUid && currentStatus.toLowerCase() !== 'confirmed') {
+								await confirmSubscriberByUid(subscriberUid);
+							}
+						} catch (error) {
+							if (!this.continueOnFail()) {
+								throw error;
+							}
+						}
 					}
+				}
+
+				returnData.push({
+					json: (response as IDataObject) ?? {},
+				});
+				continue;
+			}
 
 					if (operation === 'create') {
 						const subscriberEmail = ensureString(this.getNodeParameter('subscriberEmail', itemIndex)).trim();
@@ -3360,21 +3420,37 @@ export class Mailwizz implements INodeType {
 				const source = asString(metadata.source);
 				if (source) payload.source = source;
 
-						const response = await mailwizzApiRequest.call(
-							this,
-							'POST',
-							`/lists/${listId}/subscribers`,
-							{ data: payload },
-							{},
-							{},
-							itemIndex,
-						);
+				const response = await mailwizzApiRequest.call(
+					this,
+					'POST',
+					`/lists/${listId}/subscribers`,
+					{ data: payload },
+					{},
+					{},
+					itemIndex,
+				);
 
-						returnData.push({
-							json: (response as IDataObject) ?? {},
-						});
-						continue;
+				const shouldForceConfirm = this.getNodeParameter('forceConfirm', itemIndex, true) as boolean;
+				if (shouldForceConfirm && subscriberStatus === 'confirmed') {
+					try {
+						const record = await findSubscriberByEmail(subscriberEmail);
+						const subscriberUid = asString(record.subscriber_uid) ?? asString(record.uid);
+						const currentStatus = asString(record.status ?? record.STATUS) ?? '';
+						if (subscriberUid && currentStatus.toLowerCase() !== 'confirmed') {
+							await confirmSubscriberByUid(subscriberUid);
+						}
+					} catch (error) {
+						if (!this.continueOnFail()) {
+							throw error;
+						}
 					}
+				}
+
+				returnData.push({
+					json: (response as IDataObject) ?? {},
+				});
+				continue;
+			}
 
 					if (operation === 'get') {
 						const subscriberId = ensureString(this.getNodeParameter('subscriberId', itemIndex));
